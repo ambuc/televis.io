@@ -13,39 +13,62 @@ $(function() {
 	Parse.$ = jQuery; //reassign jQuery, god knows why
 	Parse.initialize("CI4kTSt4LME3DQopwCpnh4E4yEFwr0fEwYpAeNuF", "kh8MdcK8IcQnTMXzCmUvogxdREWP7eyRv4VGQoVG"); //initialize with login keys
 
-	var UserData = Parse.Object.extend("UserData",{
+	var Show = Parse.Object.extend("Show",{
 		defaults:{
-		    bools: 	{},
-		    showid: 0,
-		    user:   Parse.User.current(),
-		    ACL:    new Parse.ACL(Parse.User.current())
+			"classification" : null,
+			"country"		 : null,
+			"started"		 : null,
+			"ended"			 : null,
+			"name"			 : null,
+			"show_id"		 : null,
+			"status"		 : null,
+			"num_seasons"    : null,
+			"episodes"		 : [],
+			"genres"		 : []
+		},
+		initialize: function(){
+
+		},
+		ask: function(s, e){
+
+		},
+		toggle: function(s, e){
+
 		}
 	});
 
-	var TVShowModel = Parse.Object.extend("TVShowModel", {
-		defaults: {
-		    user:    Parse.User.current()
-		    // ACL:     new Parse.ACL(Parse.User.current())
+	var Bools = Parse.Object.extend("Bools",{
+		defaults:{
+			'show_id': null,
+			'seasons': null,
+		    'array': 	null,
+		    user:   Parse.User.current()
+		    // ACL:    new Parse.ACL(Parse.User.current())
+		}, 
+		initialize: function(){
+			this.set({
+				array: createArray(this.get('seasons'),0)
+			});
 		},
-		initialize:  function(){
-		  if (!this.get("lastUpdated")) {
-		    this.set({"lastUpdated": Date.today()});
-		  }
+		ask: function(s, e){
+			return this.array[s][e];
 		},
-		render: function(){
-
+		toggle: function(s, s){
+			this.array[s][e] = !this.array[s][e];
+		}, 
+		seen: function(s, e){
+			this.array[s][e] = true;
+		},
+		unseen: function(s, e){
+			this.array[s][e] = false;
 		}
 	});
-
-	var TVShowCollection = Parse.Collection.extend({model: TVShowModel });
-
-	var myTVShows = new TVShowCollection();
-
 
 	var tab = '';
-	var xhr; //one xhr request at a time, friendo
-	var defaultTab = 'settings'; //which tab to open on
-	var myData = new UserData();
+	var xhr; //one xhr request at a time, friend
+	var defaultTab = 'add'; //which tab to open on
+
+
 	//onboarding, empty, queue, add, settings
 
 	//things to do only once, on startup
@@ -57,61 +80,23 @@ $(function() {
 
 		goToTab(defaultTab); //initial homepage is queue
 		update_navbar_user_stuff();
-
-		// getUserDataFromParse();
-		// setSampleUserDataToParse();
-		// console.log(myData.get('data'));
+		getMyShows();
 
 	});
 
-//data handling test functions
+	function getMyShows(){
+		var boolsObject = Parse.Object.extend("Bools");
+		var boolsQuery = new Parse.Query(boolsObject);
+		// boolsQuery.equalTo("playerName", "Dan Stemkoski");
+		boolsQuery.find({
+			success: function(results){
+				console.log('success!');
+				console.log(results);
+			}
+		});
+	}
 
-	// function getUserDataFromParse(){
-	// 	console.log('getting user data from parse');
-	// 	var q = new Parse.Query(UserData);
-	// 	q.equalTo("user", Parse.User.current());
-	// 	q.find({
-	// 	  success: function(results) {
-	// 	    console.log("Successfully retrieved " + results.length + " scores.");
-	// 	    myData.set('bools', _.first(results).get('bools') );
-	// 	    console.log(aShow.get('bools'));
-	// 	  },
-	// 	  error: function(error) {
-	// 	    console.log("Error: " + error.code + " " + error.message);
-	// 	  }
-	// 	});
-	// 	console.log(q);
-	// }
-	// function defineSampleData(){
-	// 	var data = {};
-	// 	_.each(_.range(3),function(i){
-	// 		data[i] = [];
-	// 		_.each(_.range(2),function(j){
-	// 			data[i][j] = false;
-	// 		});
-	// 	});
-	// 	console.log(data);
-	// 	return data;
-	// }
-	// function setSampleUserDataToParse(){
-	// 	console.log('setting user data to parse');
-	// 	aShow.set('bools', defineSampleData());
-	// 	aShow.set('showid', 12345);
-	// 	aShow.save();
-	// }
-
-	// $('#updatebutton').click(function(){updateData()});
-	
-	// function updateData(){
-	// 	var tempdata = aShow.get('bools');
-	// 		// console.log(tempdata);
-	// 	tempdata["56789"] = ['1', '2', '3'];
-	// 		// console.log(tempdata);
-	// 	aShow.set('bools', tempdata)
-	// 	aShow.save({success: function(){
-	// 		console.log('successful updateData save');			
-	// 	}});
-	// }
+	//i want to keep separate PARSE items on the backend, but have a total array (backbone collection?) on the frontend which i can call from. maybe i should just be saving that? fuck.
 
 
 
@@ -305,6 +290,7 @@ $(function() {
 		}
 	}
 
+	//what's the name of the show?
 	function add_stage_a(){
 		add_switch('a');
 		$("section#add input#input").keyup(function(event){
@@ -320,11 +306,11 @@ $(function() {
 		});
 	}
 
-	//the input stage - type the string and hit submit
+	//searching for shows titled
 	function add_stage_b(string){
 		add_switch('b');
 		// console.log(string);
-		$('section#add .card-content#add-content-b span').text(string);
+		$('section#add .card-content#add-content-b b').text(string);
 		var shortname = string.toLowerCase().replace(/\s/g, '-'); //NICE ONE PLANK
 		// $('section#add .card-content#add-content-b span').text(shortname);
 		// console.log(shortname);
@@ -361,8 +347,9 @@ $(function() {
 		});
 	}
 
+	//which of these do you mean?
 	function add_stage_c(string, data){
-		$('#add-content-c h5 i').text(string);
+		// $('#add-content-c h5 b').text(string);
 	  	var template = _.template( 
 	  		$('#search-results-template').html()
   		);
@@ -375,21 +362,218 @@ $(function() {
 			var show = _.findWhere(data.show, {showid: id});
 			add_stage_d(show);
 		});
-
 	}
+
+	//where are you at?
 	function add_stage_d(show){
 		add_switch('d');
-		$('#add-content-d h5 i').text(show['name']);
+		$('#add-content-d h5 b').text(show['name']);
 		console.log(show);
-	}
-	function add_stage_e(){
 
+		$('div#add-content-d a#full').click(function(){
+			tryShow(show, true);
+		});
+		$('div#add-content-d a#part').click(function(){
+			add_stage_e(show);
+		});
+		$('div#add-content-d a#empty').click(function(){
+			tryShow(show, true);
+		});
 	}
 
+	//how far exactly?
+	function add_stage_e(show){
+	}
+
+// try and create SHOW models
+
+	function tryShow(showObj, seen){
+		//determine if the show exists or not
+		//and create it if it does
+		var query = new Parse.Query(Parse.Object.extend("Show"));
+		query.equalTo("show_id", parseInt(showObj.showid));
+		query.find({
+		  success: function(results) {
+		  	console.log('Got results from the parse query. Here they are.');
+		  	console.log(results);
+		  	//if the show doesn't exist
+		  	if (results.length == 0){
+			    console.log("Didn't find any. Creating own.");
+				var showModel = new Show({
+					'show_id' : parseInt(showObj.showid),
+					'num_seasons' : parseInt(showObj.seasons),
+					'name' : String(showObj.name),
+					'classification' : String(showObj.classification),
+					'country' : String(showObj.country),
+					'ended' : String(showObj.ended),
+					'started' : String(showObj.started),
+					'status' : String(showObj.status)
+				});
+				showModel.save({
+					success: function(){
+			    		add_switch('a');
+			    		pushAlert("Added '"+showModel.get('name')+"'.");
+						getEpisodes(showModel, seen);
+					},
+					error: function(error){
+						console.log('Didn\'t Save Show');
+						console.log(error);
+						console.log('error.code ' + error.code + error.message);
+					}
+				});
+
+		  	} else { //if it does already exist
+
+			    console.log("Successfully retrieved " + results.length + " scores. Here's the first.");
+			    
+			    var showModel = _.first(results);
+	    		getEpisodes(showModel, seen);
+			    
+			    console.log(showModel);
+	    		
+	    		add_switch('a');
+	    		pushAlert("Added '"+showModel.get('name')+"'.")
+		  	}
+		  },
+		  error: function(error) {
+		    console.log("Error: " + error.code + " " + error.message);
+		  }
+		});
+	}
+
+// episodes handling functions
+
+	function getEpisodes(showModel, seen){
+		console.log('getting episodes by model');
+		$.ajax({
+			url: 'http://www.jbuckland.com/ketchup.php?func=show&query=' + showModel.get('show_id'), 
+			dataType: "json",
+			type: 'GET',
+			success: function(data){
+
+				processedData = processEpisodes(data);
+
+				showModel.set('episodes', processedData);
+				showModel.save();
+
+				tryBools(showModel, seen);
+
+			}
+		});
+	}
+
+	function processEpisodes(data){
+		console.log(data);
+		console.log('processing episodes');
+		var result = [];
+		if ( data.totalseasons == 1 ){ //weird case
+			result[0] = [];
+			for (var i = 0; i < data.Episodelist.Season.episode.length; i++){
+				result[0][i] = {};
+				result[0][i]['airdate'] = data.Episodelist.Season.episode[i].airdate;
+				result[0][i]['epnum'] = data.Episodelist.Season.episode[i].epnum;
+				result[0][i]['seasonnum'] = data.Episodelist.Season.episode[i].seasonnum;
+				result[0][i]['title'] = data.Episodelist.Season.episode[i].title;
+			}
+		} else { //normal case
+			for (var i = 0; i < data.totalseasons; i++){
+				result[i] = [];
+				for (var j = 0; j < data.Episodelist.Season[i].episode.length; j++){
+					result[i][j] = {};
+					result[i][j]['airdate'] = data.Episodelist.Season[i].episode[j].airdate;
+					result[i][j]['epnum'] = data.Episodelist.Season[i].episode[j].epnum;
+					result[i][j]['seasonnum'] = data.Episodelist.Season[i].episode[j].seasonnum;
+					result[i][j]['title'] = data.Episodelist.Season[i].episode[j].title;
+				}
+			}
+		}
+		return result;
+	}
+
+// try and create BOOLS models
+
+	function tryBools(showModel, seen){
+
+		var query = new Parse.Query(Parse.Object.extend("Bools"));
+		
+		query.equalTo("show_id", parseInt(showModel.get('show_id')));
+		query.equalTo("user", Parse.User.current());
+		
+		query.find({
+		  success: function(results) {
+		  	console.log('Got results from the parse query. Here:');
+		  	console.log(results);
+
+		  	//if the show doesn't exist, make our own
+
+		  	if (results.length == 0){
+			    console.log("Didn't find any boolean results. Creating own.");
+				var temp = new Bools({
+					'show_id' : parseInt(showModel.get('show_id')),
+					'seasons' : parseInt(showModel.get('num_seasons'))
+				});
+
+
+				// console.log('empty is ' + status);
+				// console.log('loooking for episodes')
+				// console.log(showModel.get('episodes'));
+
+				var eps = showModel.get('episodes');
+				var array = createArray(temp.get('seasons'),0);
+				for (var i = 0; i < eps.length; i++){
+					for (var j = 0; j < eps[i].length; j++){
+						array[i][j] = seen;
+					}
+				}
+
+				temp.set({
+					'array' : array
+				});
+
+				temp.save({
+					success: function(){
+						console.log('Successfully created a BOOLS with id: ' + showModel.get('show_id') + '.');
+					},
+					error: function(error){
+						console.log('Didn\'t Save Bools');
+						console.log(error);
+						console.log('error.code ' + error.code + error.message);
+
+					}
+				});
+
+		  	} else { //if it does, use it
+
+			    console.log("Successfully retrieved " + results.length + " bools. Here's the first.");
+			    var result = _.first(results);
+			    console.log(result);
+		  	}
+		  },
+		  error: function(error) {
+		    console.log("Error: " + error.code + " " + error.message);
+		  }
+		});
+	}
+
+
+//general use
 
 	//pushes an alert to the box in the corner
 	function pushAlert(str){
 	  Materialize.toast(str, 3000);
 	}
+
+	function createArray(length) {
+	    var arr = new Array(length || 0),
+	        i = length;
+
+	    if (arguments.length > 1) {
+	        var args = Array.prototype.slice.call(arguments, 1);
+	        while(i--) arr[length-1 - i] = createArray.apply(this, args);
+	    }
+
+	    return arr;
+	}
+
 
 });
