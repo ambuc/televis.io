@@ -1,0 +1,163 @@
+/*	
+	|  _ _|_ _|_     _   /~`(~(~
+	|<(/_ | (_| ||_||_)  \_,_)_)
+	                |           
+*/		
+
+
+/*universal*/
+	/*no text selection despite double click*/
+		body{
+		    -webkit-touch-callout: none;
+		    -webkit-user-select: none;
+		    -khtml-user-select: none;
+		    -moz-user-select: none;
+		    -ms-user-select: none;
+		    user-select: none;
+		}
+	/*sticky footer*/
+		body {
+			display: flex;
+			min-height: 100vh;
+			flex-direction: column;
+		}
+		main {
+			flex: 1 0 auto;
+		}
+		.page-footer a {
+			color: #eee;
+		}
+	/*flat design*/
+		.navbar, nav, .nav-wrapper, .card, .collapsible,  .collapsible.popout li, .collapsible.popout li.active{
+			/*box-shadow: none;*/
+			/*border: none;*/
+		}
+	/*better spacing for sections*/
+		section { 
+			margin-top: 10px;
+		}
+	/*better spacing for episodes*/
+		.ep { 
+			margin:5px; 
+		}
+		.eptitle {
+			max-width: 210px;
+		}
+	/*white background for divs*/
+		.row{
+			margin-bottom:0px;
+			padding-bottom:20px;
+		}
+		#collapsible .row{
+			background: white;
+		}
+	/*better card title line height*/
+		.card-title { 
+			line-height: 40% !important; 
+		}
+	/*better container width*/
+		.container {
+			/*width: 90%;*/
+		}
+
+/*buttons*/
+	/*less padding on sides*/
+		.btn, .btn-flat{ 
+			padding-left: 10px; 
+			padding-right: 10px;
+		}
+	/*no border no padding no margin*/
+		.btn, .btn-flat{
+			border-radius: 0px;
+			padding:0px margin:0px;
+		}
+	/*undo padding for large buttons*/
+		.btn-large, .btn-large:hover{
+			/*padding-left: 20px;*/
+			/*padding-right: 20px;*/
+			/*box-shadow: none;*/
+		}
+	/*better padding for episodes*/
+		.episode{
+			margin-bottom:5px;
+		}
+
+/*tabs*/
+	/*display tabs at full width with better padding*/
+		.navtabs li { 
+			width: 100%;
+			display: inline-block; 
+			padding:5px; 
+		}
+	/*full width button links*/
+		.navtabs a{
+			width: 100%;
+		}
+		.navtabs{
+			height:60px;
+		}
+
+
+/*queue*/
+	/*no capitalization in queue*/
+		#eps a{
+			text-transform: none;
+		}
+	/*better padding for queue*/
+		#eps a{
+			margin:0px; 
+			/*padding:0px;*/
+			border-radius: 0px;
+		}
+
+/*editor*/
+	/*better render of input field*/
+		#edit .input-field{
+			padding: 10px;
+			padding-bottom:0px;
+			border-radius: 5px;
+		}
+	/*better margins for shows in #yourShows*/
+		#yourShows a { 
+			margin: 5px;
+		}
+	/*scroll in addShow tab*/
+		#add-show-choose #searchResults{
+			overflow-y: scroll;
+			max-height:150px;
+		}
+
+
+/*calendar*/
+	/*no capitalization in queue*/
+		table#calendartable a{
+			text-transform: none;
+		}
+	/*fixed width*/
+		table#calendartable{
+			table-layout: fixed;
+		}
+	/*centered no border*/
+		table#calendartable td{ 
+			text-align: center;
+			border: 1px solid #eee;
+		}
+	/*today cell*/
+		table#calendartable .today{
+			border: 5px solid #ffcdd2;
+			background: #ffebee;
+		}
+	/*better spacing*/
+		table#calendartable .btn-flat{
+			padding-left:	5px;
+			padding-right: 	5px;
+			margin-top:2px;
+			margin-bottom:2px;
+			width:100%;
+		}
+
+/*dashboard*/
+	/*better widths in tab containers*/
+		.epsContainer{
+			width:100%;
+		}		

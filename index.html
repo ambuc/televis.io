@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html ng-app>
+  <head>
+    <title>televis.io</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+    <link rel="stylesheet" href="css/index.css">         
+    
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  </head>
+  <body>
+
+<!---- -- HEADER -- -- -->
+
+    <header>
+      <div class="navbar-fixed">
+        <nav>
+          <div class="nav-wrapper cyan">
+            <div class='container'>
+              <ul id="nav-mobile" class="left">
+                <li>
+                  <a href="#" id='whoami'>
+                    <i class='material-icons left  hide-on-small-only'>perm_identity</i>
+                    <span></span>
+                  </a>
+                </li>
+              </ul>
+              <div href="#" class="brand-logo center"> 
+                <!-- <span style="color:black;">&laquo;</span>  -->
+                <i class="material-icons left hide-on-small-only">dvr</i>
+                televis.io 
+                <!-- <span style="color:black;">&raquo;</span>  -->
+              </div>
+              
+              <ul id="nav-mobile" class="right">
+                <li>
+                  <a id='logio'>
+                    <i class='material-icons right hide-on-small-only'>exit_to_app</i>
+                    Log Out
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+      </div>
+
+      <div class='container'>
+        <div id="tabsblock" class="col l12 m12 s12" style="display: block;">
+          <ul class="navtabs center-align row"> 
+            <li class="col s4">
+              <a id="add" class="waves-effect cyan lighten-2 white-text btn-large">
+                <i class="material-icons left hide-on-small-only">add</i> Add
+              </a>
+            </li>
+            <li class="col s4">
+              <a id="queue" class="waves-effect cyan white-text btn-large">
+                <i class="material-icons left hide-on-small-only">format_list_bulleted</i>
+                Queue (9)
+              </a>
+            </li>
+            <li class="col s4">
+              <a id="settings" class="waves-effect cyan darken-2 white-text btn-large">
+                <i class="material-icons left hide-on-small-only">settings</i>
+                Settings
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </header>
+
+    <main>
+      <div class='container'>
+      
+        <section id='onboarding'>
+          <div class='card white lighten-2'>
+            
+            <div class='card-content' id='about'>
+              <p class='flow-text'><b>televis.io</b> lets you follow television in real time, tracking what you've seen, what you haven't, and what's coming up.</p>
+            </div>
+            <div class='card-content' id='entry'>
+              <h5></h5>
+              <div class='row'>
+                  <div class="input-field col s6">
+                    <i class="material-icons prefix">account_circle</i>
+                    <input id="username" type="text" class="validate">
+                    <label for="username">Username</label>
+                  </div>
+                  <div class="input-field col s6">
+                    <i class="material-icons prefix">vpn_key</i>
+                    <input id="password" type="password" class="validate">
+                    <label for="password">Password</label>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <div class="card-action"> 
+              <a class="waves-effect btn-large red white-text" id='cancel'>
+                <i class='material-icons left'>backspace</i>
+                Cancel
+              </a>
+
+              <a class="waves-effect btn-large blue white-text" id='signup'>
+                <i class='material-icons left'>power_settings_new</i>
+                Sign Up
+              </a> 
+              <a class="waves-effect btn-large green white-text" id='login'>
+                <i class='material-icons left'>vpn_key</i>
+                Log In
+              </a>
+              
+            </div>
+          </div>
+        </section>
+        
+        <section id='empty' class='col l10 m12 s12'>
+          <div class='card white lighten-2'>
+            <div class="card-content"> 
+              <h5>There's nothing in your queue.</h5> 
+              <p class='flow-text'>You've watched <i>so</i> much television. But there's always more!</p> 
+            </div> 
+            <div class="card-action"> 
+              <a class="waves-effect btn green white-text" onclick="goToTab('add');">Add a new show</a> 
+              <a class="waves-effect btn cyan white-text" onclick="goToTab('add');">
+                <i class='material-icons left'>edit</i>
+                Add some shows
+              </a> 
+            </div> 
+          </div>
+        </section>
+
+<!--    -- -- QUEUE -- -- -->
+
+        <section id="queue" class="col l10 m12 s12">
+          <div class='row'>
+            <div class='col s12'>
+
+              <ul class="collection">
+                <li class="collection-item avatar">
+                  <span class="badge">2 unseen</span>
+                  <i class="material-icons circle">tv</i>
+                  <span class="title">Hannibal</span>
+                  <p>
+                    <a class='episode btn green lighten-3 white-text'> <i class="material-icons left">check_box</i> 2x09 Apetite </a>
+                    <a class='episode btn green white-text'> <i class="material-icons left">check_box_outline_blank</i> 2x10 Sausages </a>
+                  </p>
+                </li>
+                <li class="collection-item avatar">
+                  <span class="badge">7 unseen</span>
+                  <i class="material-icons circle">tv</i>
+                  <span class="title">Sense8</span>
+                  <p>
+                    <a class='episode btn green white-text'> <i class="material-icons left">check_box_outline_blank</i> 1x01 Pilot </a>
+                    <a class='episode btn green white-text'> <i class="material-icons left">check_box_outline_blank</i> 1x02 Next Episode </a>
+                    <a class='episode btn green white-text'> <i class="material-icons left">check_box_outline_blank</i> 1x02 Then this one </a>
+                    <a class='episode btn grey white-text'> <i class="material-icons left">expand_more</i>and 4 more</a>
+                  </p>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>  
+
+<!--    -- -- EDITOR -- -- -->
+
+        <section id="add" class="col l12 m12 s12">
+          <div class='row'>
+
+            <div class='col s12 m12 l12'>
+              <div class="card white lighten-3" onclick="$('#AddShowTitle').focus();">                
+
+                <div class="card-content" id='add-content-a'>
+                  <h5> What's the name of the show you're watching? </h5>
+                  <div class="input-field grey lighten-5">
+                    <input id="input" type="text" class="validate"/>
+                  </div>
+                </div>
+
+                <div class="card-content" id='add-content-b'>
+                  <h5> Searching for shows titled "<span></span>" </h5>
+                  <div class="progress pink lighten-4">
+                      <div class="indeterminate red darken-2"></div>
+                  </div>
+                </div>
+
+                <div class="card-content" id='add-content-c'>
+                  <h5> Results for <i></i>: </h5>
+                  <span></span>
+                </div>
+
+                <script type="text/template" id="search-results-template">
+                  <ul class="collection">
+                  <% _.each(results, function(result) { %>
+                    <a class="collection-item avatar black-text" id=<%=result['showid']%> >
+                      <i class="material-icons circle green">tv</i>
+                      <span class="title"><%=result['name']%></span>
+                      <p><%=result['seasons']%> season(s) (<%=result['started']%>) <br>
+                         <%=result['status']%>
+                      </p>
+                    </a>
+                  <% }); %>
+                  </ul>
+                </script>
+
+                <div class="card-content" id='add-content-d'>
+                  <h5>Where are you at in <i></i>?</h5>
+                  <a class="waves-effect waves-light btn green" style="min-width:50%;">
+                    <i class="material-icons left">lens</i>
+                    All Caught Up
+                  </a> <br/>
+                  <a class="waves-effect waves-light btn green darken-2" style="min-width:50%;">
+                    <i class="material-icons left">timelapse</i>
+                    Partway Through
+                  </a> <br/>
+                  <a class="waves-effect waves-light btn green darken-4" style="min-width:50%;">
+                    <i class="material-icons left">panorama_fish_eye</i>
+                    Starting from Scratch
+                  </a>
+                </div>
+
+                <div class="card-content" id='add-content-e'>
+                  <h5>Which seasons have you finished?</h5>
+                  <table>
+                    <tr>
+                      <td> Season 1 </td>
+                      <td>
+                        <span class='switch'>
+                          <label>
+                            <!-- No -->
+                            <input type="checkbox">
+                            <span class="lever"></span>
+                            Finished
+                          </label>
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+
+                <div class='card-action'>
+                  <a class='waves-effect btn btn-flat green white-text' id='add'>
+                    <i class="material-icons left">create</i>
+                    <span id='AddShowButtonText'>Add Show</span>
+                  </a>
+                  <a class='waves-effect btn btn-flat red white-text' id='cancel'>
+                    <i class="material-icons left">cancel</i>
+                    <span id='AddShowButtonText'>Cancel</span>
+                  </a>
+                </div> <!-- card-action -->
+              </div> <!-- card -->
+            </div> <!-- second column -->
+
+          </div> <!-- row -->
+        </section> <!-- add -->
+
+<!--    -- -- SETTINGS -- -- -->
+
+        <section id="settings" class="col l10 m12 s12">
+          <div class='row'>
+            <div class='col s12 m12 l12'>
+              <!-- <h4> Settings </h4> -->
+
+              <div class="col s12">
+                <ul class="tabs">
+                  <li class="tab col">
+                    <a class="active" href="#myshows">
+                      My Shows
+                    </a>
+                  </li>
+                  <li class="tab col">
+                    <a href="#profile">
+                      Profile
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <div id="myshows" class="col s12">
+                <div class='row'>
+                  <div class='col s12'>
+                    <a class='btn-large btn-flat white black-text'>
+                      Sort by:
+                    </a>
+                    <a class='btn-large btn-flat white black-text'>
+                      <i class='material-icons'>sort_by_alpha</i>
+                    </a>
+                    <a class='btn-large btn-flat white black-text'>
+                      <i class='large material-icons'>av_timer</i>
+                    </a>
+                    <a class='btn-large btn-flat white black-text'>
+                      <i class='large material-icons'>sort</i>
+                    </a>
+                  </div>
+                  <div class='col s12'>
+                    <ul class="collection">
+                      <li class="collection-item avatar">
+                        <i class="material-icons circle green">tv</i>
+                        <div class="title truncate">
+                          <span class='grey-text'>10</span>
+                          It's Always Sunny in Philadelphia
+                        </div>
+
+                        <p>
+                          <i class="material-icons green-text tooltipped" data-position="right" data-delay="50" data-tooltip="Season 1: 100%">lens</i>
+                          <i class="material-icons green-text">lens</i>
+                          <i class="material-icons green-text">lens</i>
+                          <i class="material-icons light-green-text">timelapse</i>
+                          <i class="material-icons grey-text">radio_button_unchecked</i>
+                        </p>
+                        <a class="btn blue secondary-content">
+                          <i class="material-icons">expand_more</i>
+                        </a>
+                      </li>
+                      <li class="collection-item grey lighten-3">
+                        <div class="row">
+                          <div class="col s12">
+                            <ul class="tabs grey lighten-3">
+                              <li class="tab col"><a class="active" href="#test1">S1</a></li>
+                              <li class="tab col"><a href="#test2">S2</a></li>
+                              <li class="tab col"><a href="#test3">S3</a></li>
+                            </ul>
+                            <br/>
+                          </div>
+                          <div id="test1" class="col s12">
+                            <a class='episode btn green lighten-3'>
+                              <i class="material-icons left">check_box</i>
+                              1x01 Pilot
+                            </a>
+                            <a class='episode btn green'>
+                              <i class="material-icons left">check_box_outline_blank</i>
+                              1x02 Two
+                            </a>
+                            <a class='episode btn green'>
+                              <i class="material-icons left">check_box_outline_blank</i>
+                              1x03 Three
+                            </a>
+                            <a class='episode btn green'>
+                              <i class="material-icons left">check_box_outline_blank</i>
+                              1x04 Four
+                            </a>
+                            <a class='episode btn green'>
+                              <i class="material-icons left">check_box_outline_blank</i>
+                              1x05 Five
+                            </a>
+                          </div>
+                          <div id="test2" class="col s12">Test 2</div>
+                          <div id="test3" class="col s12">Test 3</div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                  
+                </div>
+                    
+              </div>
+              <div id="profile" class="col s12">
+
+                <a class="waves-effect btn red white-text" id='Reset' onclick="resetShows();">
+                  <i class="mdi-action-delete left"></i>
+                  Reset all
+                </a>
+              </div>
+
+              <!-- <a class='dropdown-button btn' href='#' data-activates='dropdown1'>Drop Me!</a>
+
+              <ul id='dropdown1' class='dropdown-content'>
+                <li><a href="#!">one</a></li>
+                <li><a href="#!">two</a></li>
+                <li class="divider"></li>
+                <li><a href="#!">three</a></li>
+              </ul> -->
+
+
+            </div>
+          </div>
+
+        </section>
+      </div>
+    </main>
+
+<!---- -- FOOTER -- -- -->
+
+    <footer class="page-footer grey">
+      <div class="container">
+        <div class='row'>
+          <div class='col s12'>
+            Written by <a href="http://ambuc.github.io">James Buckland</a>. Built with <a href="http://parse.com">Parse</a> + <a href='http://backbonejs.org'>Backbone</a> + <a href="http://underscorejs.org">Underscore</a> + <a href="http://materializecss.com">Materialize</a> + <a href="http://www.tvrage.com/">TVRage API</a> + <a href="http://www.isgoodstuff.com/2012/07/22/cross-domain-xml-using-jquery/">cross-domain AJAX</a> + <a href="https://code.jquery.com/">jQuery</a>.
+          </div>
+        </div>
+      </div>
+    </footer>
+
+  </body>  
+
+<!-- -- -- -- JAVASCRIPT -- -- -- -->
+
+  <script src="lib/jquery-2.1.4.js"></script>
+  <!-- // <script src="http://www.parsecdn.com/js/parse-1.4.2.min.js"></script> -->
+  <script src="lib/parse-1.4.2.min.js"></script>
+  <!-- // <script src="lib/backbone.js"></script> -->
+
+  <!-- // <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script> -->
+  <script src="lib/underscore-min.js"></script>
+
+  <!-- // <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.0/js/materialize.min.js"></script> -->
+  <script src="lib/materialize.min.js"></script>
+
+  <script src="lib/date.min.js"></script>
+
+  <script src="lib/jquery.xdomainajax.js"></script>
+
+  <script src="lib/xml2json.min.js"></script>
+
+  <script src="js/televisio.js"></script>
+
+</html>
