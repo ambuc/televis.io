@@ -16,23 +16,85 @@
 <!---- -- HEADER -- -- -->
 
     <header>
+
+      <!-- <div class='navbar-fixed'>
+        <nav class='cyan lighten-3'>
+          <div class="nav-wrapper" style='margin-left: 20px;'>
+            <a href="#!" class="brand-logo">
+              <i class="material-icons left hide-on-med-and-down">dvr</i>
+              televis.io
+            </a>
+            <a href="#" data-activates="mobile-demo" class="hide-on-med-and-up button-collapse">
+              <i class="material-icons">menu</i>
+            </a>
+            
+
+            <ul class="right hide-on-small-only" id='tabsblock'>
+              <li><a class='waves-effect cyan' id='add'> 
+                <i class='material-icons hide-on-large-only'>add</i>
+                <i class='material-icons left hide-on-med-only'>add</i>
+                <span class='hide-on-med-and-down'>Add</span> 
+              </a></li>
+              <li><a class='waves-effect teal' id='queue'> 
+                <i class='material-icons hide-on-large-only'>format_list_bulleted</i>
+                <i class='material-icons left hide-on-med-only'>format_list_bulleted</i>
+                <span class='hide-on-med-and-down'> <span id='totalQueued'></span> Queued </span>
+              </a> </li>
+              <li><a class='waves-effect green' id='manage'> 
+                <i class='material-icons hide-on-large-only'>settings</i>
+                <i class='material-icons left hide-on-med-only'>settings</i>
+                <span class='hide-on-med-and-down'>Manage</span> 
+              </a></li>
+              <li><a class='waves-effect light-green' id='logio'> 
+                <i class='material-icons hide-on-large-only'>exit_to_app</i>
+                <i class='material-icons left hide-on-med-only'>exit_to_app</i>
+                <span class='hide-on-med-and-down'>Log Out</span> 
+              </a></li>
+            </ul>
+
+            <ul class="side-nav" id="mobile-demo">
+              <li><a href="sass.html">Sass</a></li>
+              <li><a href="badges.html">Components</a></li>
+              <li><a href="collapsible.html">Javascript</a></li>
+              <li><a href="mobile.html">Mobile</a></li>
+            </ul>
+          </div>
+        </nav>
+      </div> -->
+
+      <!-- <li class="col s4">
+              <a id="add" class="waves-effect deep-orange darken-3 white-text btn-large">
+                <i class="material-icons left hide-on-small-only">add</i> Add
+              </a>
+            </li>
+            <li class="col s4">
+              <a id="queue" class="waves-effect deep-orange white-text btn-large">
+                <i class="material-icons left hide-on-small-only">format_list_bulleted</i>
+                <span id='totalQueued'></span> Queued
+              </a>
+            </li>
+            <li class="col s4">
+              <a id="manage" class="waves-effect deep-orange lighten-2 white-text btn-large">
+                <i class="material-icons left hide-on-small-only">settings</i>
+                Manage
+              </a>
+            </li> -->
+
       <div class="navbar-fixed">
         <nav>
-          <div class="nav-wrapper green darken-1">
+          <div class="nav-wrapper blue lighten-2">
             <div class='container'>
               <ul id="nav-mobile" class="left">
                 <li>
                   <a href="#" id='whoami'>
-                    <i class='material-icons left  hide-on-small-only'>perm_identity</i>
+                    <i class='material-icons left hide-on-small-only'>perm_identity</i>
                     <span></span>
                   </a>
                 </li>
               </ul>
               <div href="#" class="brand-logo center"> 
-                <!-- <span style="color:black;">&laquo;</span>  -->
                 <i class="material-icons left hide-on-small-only">dvr</i>
                 televis.io 
-                <!-- <span style="color:black;">&raquo;</span>  -->
               </div>
               
               <ul id="nav-mobile" class="right">
@@ -49,21 +111,21 @@
       </div>
 
       <div class='container'>
-        <div id="tabsblock" class="col l12 m12 s12" style="display: block;">
+        <div class="col l12 m12 s12 tabsblock" style="display: block;">
           <ul class="navtabs center-align row"> 
             <li class="col s4">
-              <a id="add" class="waves-effect green darken-3 white-text btn-large">
+              <a id="add" class="waves-effect blue lighten-1 white-text btn-large">
                 <i class="material-icons left hide-on-small-only">add</i> Add
               </a>
             </li>
             <li class="col s4">
-              <a id="queue" class="waves-effect green white-text btn-large">
+              <a id="queue" class="waves-effect blue darken-2 white-text btn-large">
                 <i class="material-icons left hide-on-small-only">format_list_bulleted</i>
-                Queue <span id='totalUnseen'></span>
+                <span id='totalQueued'></span> Queued
               </a>
             </li>
             <li class="col s4">
-              <a id="manage" class="waves-effect green lighten-2 white-text btn-large">
+              <a id="manage" class="waves-effect blue lighten-1 white-text btn-large">
                 <i class="material-icons left hide-on-small-only">settings</i>
                 Manage
               </a>
@@ -101,18 +163,23 @@
             </div>
 
             <div class="card-action"> 
-              <a class="waves-effect btn-large red white-text" id='cancel'>
-                <i class='material-icons left'>backspace</i>
-                Cancel
-              </a>
+                <a class="waves-effect btn-large   red white-text" id='cancel'>
+                  <i class='material-icons left'>backspace</i>
+                  Cancel
+                </a>
 
-              <a class="waves-effect btn-large blue white-text" id='signup'>
-                <i class='material-icons left'>power_settings_new</i>
-                Sign Up
-              </a> 
-              <a class="waves-effect btn-large green white-text" id='login'>
+                <a class="waves-effect btn-large right blue white-text" id='signup'>
+                  <i class='material-icons left'>power_settings_new</i>
+                  Sign Up
+                </a> 
+
+              <a class="waves-effect btn-large light-green white-text" id='login'>
                 <i class='material-icons left'>vpn_key</i>
                 Log In
+              </a>
+              <a class="waves-effect btn-large green white-text right" id='go'>
+                <i class='material-icons left'>forward</i>
+                go
               </a>
               
             </div>
@@ -166,7 +233,7 @@
                 <%=showname%>
               </a>
               <a class=' secondary-content btn-flat white grey-text'>
-                <span id='unseen<%=showid%>'></span> new
+                <span id='unseen<%=showid%>'></span> queued
               </a>
             </span>
             <p>
@@ -227,21 +294,30 @@
 
                 <div class="card-content" id='add-content-d'>
                   <h5>Where are you at in <b></b>?</h5>
-                  <a class="waves-effect waves-light btn green" 
-                    style="min-width:50%;" id='full'>
-                    <i class="material-icons left">lens</i>
-                    All Caught Up
-                  </a> <br/>
-                  <!-- <a class="waves-effect waves-light btn green darken-2" 
-                    style="min-width:50%;" id='part'>
-                    <i class="material-icons left">timelapse</i>
-                    Partway Through
-                  </a> <br/> -->
-                  <a class="waves-effect waves-light btn green darken-4" 
-                    style="min-width:50%;" id='empty'>
-                    <i class="material-icons left">panorama_fish_eye</i>
-                    Starting from Scratch
-                  </a>
+                  <div class='row'>
+                    <div class='col s12 m4 l4'>
+                      <a class="waves-effect waves-light btn-large grey" 
+                        style='width:100%;' id='full'>
+                        <i class="material-icons left">panorama_fish_eye</i>
+                        <span class='hide-on-med-only'>All </span>Caught Up
+                      </a>
+                    </div>
+                    <div class='col s12 m4 l4'>
+                      <a class="waves-effect waves-light btn-large green lighten-1" 
+                        style='width:100%;' id='part'>
+                        <i class="material-icons left">timelapse</i>
+                        Partway Through
+                      </a>
+                    </div>
+                    <div class='col s12 m4 l4'>
+                      <a class="waves-effect waves-light btn-large green darken-1" 
+                        style='width:100%;' id='empty'>
+                        <i class="material-icons left">lens</i>
+                        <span class='hide-on-med-only'>Just </span>Starting
+                      </a>
+                    </div>
+                  </div>
+                  
                 </div>
 
                 <div class="card-content" id='add-content-e'>
@@ -261,6 +337,25 @@
                       </td>
                     </tr>
                   </table>
+                </div>
+
+                <div class="card-content" id='add-content-f'>
+                  <h5>Getting Episodes of <b></b> from the Database</h5>
+                  <div class="preloader-wrapper big active">
+                    <div class="spinner-layer spinner-blue-only">
+                      <div class="circle-clipper left">
+                        <div class="circle"></div>
+                      </div><div class="gap-patch">
+                        <div class="circle"></div>
+                      </div><div class="circle-clipper right">
+                        <div class="circle"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-content" id='add-content-g'>
+                  <h5>You're now subscribed to <b></b>!</h5>
                 </div>
 
                 <div class='card-action'>
@@ -322,9 +417,6 @@
               <a class="btn blue" id='expand' data_id=<%=showid%>>
                 <i class="material-icons">expand_more</i>
               </a>
-              <a class="btn red lighten-1" id='delete'>
-                <i class="material-icons">delete</i>
-              </a>
             </span>
           </li>
         </script>
@@ -341,6 +433,11 @@
                       </a>
                     </li>
                   <%}%>
+                  <li class='tab col'>
+                    <a href='#<%=showid+'del'%>' class=''>
+                      <i class='material-icons' style='margin-top:12px;'>settings</i>
+                    </a>
+                  </li>
                 </ul>
                 <br/>
               </div>
@@ -348,7 +445,27 @@
                 <div id=<%=showid+'x'+i%> class="col s12">
                 </div>
               <%}%>
-              
+              <div id=<%=showid+'del'%> class='col s12'>
+                <div class="card white">
+                  <div class="card-content">
+                    <span class="card-title black-text"><%=name%> <small><%=status%></small></span>
+                  </div>
+                  <div class="card-action">
+                    <a class="btn red lighten-1 white-text" id='delete' data_id=<%=showid%> data_name="<%=name%>">
+                      <i class="material-icons left">delete</i>
+                      Delete Show
+                    </a>
+                    <a class="btn light-blue lighten-1 white-text" id='reset' data_id=<%=showid%> data_name="<%=name%>">
+                      <i class="material-icons left">sync</i>
+                      Reset Progress
+                    </a>
+                    <a class="btn light-green lighten-1 white-text" id='set' data_id=<%=showid%> data_name="<%=name%>">
+                      <i class="material-icons left">markunread_mailbox</i>
+                      Mark All As Seen
+                    </a>
+                  </div>
+                </div>                
+              </div>
             </div>
           </li>
         </script>

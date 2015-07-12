@@ -1,9 +1,7 @@
 //TODO
+
 //airdate-dependent coloring and presentation
-//maybe visually display boolean creation - time to create means they won't close the page
-//test at larger scales
 //ability to load in new tvrage data and flexibly expand boolean arrays
-//refresh after show add, please
 //partial caught up feature
 //calendar
 
@@ -14,7 +12,7 @@ $(function() {
 
 	var xhr; //one xhr request at a time, friend
 	var currentTab = '';
-	var defaultTab = 'manage'; //which tab to open on
+	var defaultTab = 'queue'; //which tab to open on
 	var queueLimit = 3;
 	var _MS_PER_DAY = 1000 * 60 * 60 * 24; //stuff for date handling, from SE
 	var today = Date.today();
@@ -25,6 +23,7 @@ $(function() {
 	$(document).ready(function() {
 		
 		initializeTabs(); //click behavior
+		$(".button-collapse").sideNav();
 		goToTab(defaultTab); //initial homepage is queue
 		checkUser(); //if logged in, get info. if not, present onboarding
 	});
@@ -33,7 +32,7 @@ $(function() {
 
 	//jquery behavior for tab drawing
 	function initializeTabs(){
-		$('#tabsblock a').click(function(){
+		$('.tabsblock a').click(function(){
 			goToTab($(this).attr('id'));
 		});
 	}
@@ -47,9 +46,9 @@ $(function() {
 			currentTab = str;
 			$('main section').hide();
 			$('section#'+str).show();
-			$('.navtabs a').removeClass('btn-large');
-			$('.navtabs a').addClass('btn');
-			$('.navtabs a#'+str).toggleClass('btn-large');
+			$('.navtabs a').removeClass('btn-large darken-2');
+			$('.navtabs a').addClass('btn lighten-1');
+			$('.navtabs a#'+str).toggleClass('btn btn-large darken-2 lighten-1');
 			if (str == 'add'){
 				add_stage_a();
 			} else if (str == 'onboarding'){
@@ -82,7 +81,7 @@ $(function() {
 
 	        $('#whoami').show();
 	        $('#whoami span').text(Parse.User.current().attributes.username);
-	        $('#whoami').click(function(){
+	        $('ul#dropdown #whoami').click(function(){
 	        	goToTab('manage');
 	        });    		
 		} else {
@@ -97,9 +96,11 @@ $(function() {
 
 	function logMeOut(){
 		Parse.User.logOut();
-		$('#totalUnseen').empty();
+		$('#totalQueued').empty();
         $('#logio').hide();
         $('#whoami').hide();
+        myBools = new BoolsCollection;
+		myShows = new ShowsCollection;
 		goToTab('onboarding');
 	}
 
@@ -108,7 +109,6 @@ $(function() {
 	function onboarding_switch(stage){
 		$('section#onboarding .card-content').hide();
 		$('section#onboarding .card-action a').hide();
-		$('section#onboarding .card-action a').unbind();
 		onboarding_try_again();
 		if(stage=='a'){
 			$('section#onboarding .card-content#about').show();
@@ -126,6 +126,7 @@ $(function() {
 	function onboarding_init(){
 		goToTab('onboarding');
 		onboarding_switch('a');
+		$('section#onboarding .card-action a').unbind();
 		$('section#onboarding .card-action a#login').click(function(){
 			onboarding_login();
 		});
@@ -136,8 +137,10 @@ $(function() {
 
 	function onboarding_login(){
 		$('section#onboarding #entry h5').text('Log In');
+
 		onboarding_switch('b');
-		$('section#onboarding .card-action a#login').show();
+
+		$('section#onboarding .card-action a#go').show();
 		$('input#username').focus();
 
 		$("input#password").keyup(function(event){
@@ -146,7 +149,7 @@ $(function() {
 			}
 		});
 
-		$("section#onboarding .card-action a#login").click(function(event){
+		$("section#onboarding .card-action a#go").click(function(event){
 			onboarding_collect();
 		});
 	}
@@ -154,7 +157,7 @@ $(function() {
 	function onboarding_signup(){
 		$('section#onboarding #entry h5').text('Sign Up');
 		onboarding_switch('b');
-		$('section#onboarding .card-action a#signup').show();
+		$('section#onboarding .card-action a#go').show();
 		$('input#username').focus();
 
 		$("input#password").keyup(function(event){
@@ -163,7 +166,7 @@ $(function() {
 			}
 		});
 
-		$("section#onboarding .card-action a#signup").click(function(event){
+		$("section#onboarding .card-action a#go").click(function(event){
 			onboarding_collect();
 		});
 	}
@@ -270,13 +273,14 @@ $(function() {
 			add_switch('a');
 			return;
 		}
-
+		// console.log(shortname);
 		xhr = $.ajax({
 			url: 'http://www.jbuckland.com/ketchup.php?func=search&query=' + shortname, 
 			// url: 'http://services.tvrage.com/feeds/search.php?show=' + shortname, 
 			dataType: "json",
 			type: 'GET',
 			success: function(data){
+				console.log(data);
 				if (data == false){
 					//cancel
 					add_switch('a');
@@ -290,7 +294,11 @@ $(function() {
 					add_switch('c');
 					add_stage_c(string, data);
 					// console.log(data);
-					pushAlert(data.show.length + ' Results Found');
+					if(data.show.length){
+						pushAlert(data.show.length + ' Results Found');
+					} else {
+						pushAlert('1 Result Found');						
+					}
 				}
 			}
 		});
@@ -298,10 +306,20 @@ $(function() {
 
 	//which of these do you mean?
 	function add_stage_c(string, data){
-		// $('#add-content-c h5 b').text(string);
+
+		console.log('is array? ' + _.isArray(data['show']));
+
+		//if there's only one search result, wrap it in an array
+		if(!_.isArray(data['show'])){
+			var tempdata = data['show'];
+			data['show'] = new Array();
+			data['show'].push(tempdata);
+		}
+
 	  	var template = _.template( 
 	  		$('#search-results-template').html()
   		);
+
 	  	var templateData = { results: data.show };
 
 		$("#add-content-c span").html( template(templateData) );
@@ -321,17 +339,32 @@ $(function() {
 
 		$('div#add-content-d a#full').click(function(){
 			addShow(show, true);
+			add_stage_f(show);
 		});
 		$('div#add-content-d a#part').click(function(){
 			add_stage_e(show);
 		});
 		$('div#add-content-d a#empty').click(function(){
 			addShow(show, false);
+			add_stage_f(show);
 		});
 	}
 
 	//how far exactly?
 	function add_stage_e(show){
+	}
+
+	function add_stage_f(show){
+		add_switch('f');
+		$('#add-content-f h5 b').text(show['name']);
+	}
+	function add_stage_g(name){
+		queue_render();
+		add_switch('g');
+		$('#add-content-g h5 b').text(name);
+		setTimeout(function(){
+			add_switch('a');
+		},3000)
 	}
 
 
@@ -401,7 +434,13 @@ $(function() {
 
 				temp.save({
 					success: function(){
-						// console.log('Successfully created a BOOLS with id: ' + showModel.get('show_id') + '.');
+						var name = showModel.get('name');
+						add_stage_g(name);
+						pushAlert('Successfully added ' + name);
+						getMyBools();
+			    		manage_render();
+			    		queue_render();
+	    		  		update_queued();
 					},
 					error: function(error){
 						// console.log('Didn\'t Save Bools');
@@ -415,6 +454,10 @@ $(function() {
 
 			    // console.log("Successfully retrieved " + results.length + " bools. Here's the first.");
 			    var result = _.first(results);
+			    getMyBools();
+	    		manage_render();
+	    		queue_render();
+		  		update_queued();
 			    // console.log(result);
 		  	}
 		  },
@@ -474,8 +517,7 @@ $(function() {
 				});
 				showModel.save({
 					success: function(){
-			    		add_switch('a');
-			    		pushAlert("Added '"+showModel.get('name')+"'.");
+			    		pushAlert("Getting '"+showModel.get('name')+"'...");
 						fetchEps(showModel, seen);
 					},
 					error: function(error){
@@ -494,8 +536,8 @@ $(function() {
 			    
 			    // console.log(showModel);
 	    		
-	    		add_switch('a');
-	    		pushAlert("Added '"+showModel.get('name')+"'.")
+	    		// add_switch('a');
+	    		pushAlert("Getting '"+showModel.get('name')+"'...")
 		  	}
 		  },
 		  error: function(error) {
@@ -529,7 +571,7 @@ $(function() {
 	}
 
 	function processEpisodes(data){
-		// console.log(data);
+		console.log(data);
 		// console.log('processing episodes');
 		var result = [];
 		if ( data.totalseasons == 1 ){ //weird case
@@ -542,7 +584,7 @@ $(function() {
 				result[0][i]['title'] = data.Episodelist.Season.episode[i].title;
 			}
 		} else { //normal case
-			for (var i = 0; i < data.totalseasons; i++){
+			for (var i = 0; i < data.Episodelist.Season.length; i++){
 				result[i] = [];
 				for (var j = 0; j < data.Episodelist.Season[i].episode.length; j++){
 					result[i][j] = {};
@@ -572,7 +614,7 @@ $(function() {
 		},
 		initialize : function(){
 			// console.log('initialize showsCollection');
-		}
+		},
 	});
 
 	var myBools = new BoolsCollection;
@@ -593,6 +635,7 @@ $(function() {
 					// console.log(index);
 					getSingleShow(result.get('show_id'), index);
 				});
+
 			}
 		});
 	}
@@ -625,13 +668,13 @@ $(function() {
 
 	function queue_render(){
 		if (myBools.length != myShows.length){ return; }
-		if (myBools.length == 0 || myShows.length == 0){ return; }
-		// console.log('tests passed, rendering queue afresh');
-
-		//these are queue-specific
-		var totalUnseen = 0;
-	  	var showTemplate = _.template( $('#queue-item-template').html() );
+		// if (myBools.length == 0 || myShows.length == 0){goToTab('empty'); }
+		console.log('tests passed, rendering queue afresh');
 		
+		//these are queue-specific
+	  	var showTemplate = _.template( $('#queue-item-template').html() );
+	  	var episodeTemplate = _.template( $('#episode-template').html() );
+
 		//empty the queue
 		$("section#queue #queuecollection").empty();
 	  	
@@ -652,7 +695,7 @@ $(function() {
 			//these are all show-specific
 		  	var show_id = myShows.at(i).get('show_id');
 	  		var seasons = myShows.at(i).get('episodes');
-	  		var unseenCount = 0;
+	  		var queuedCount = 0;
 	  		var hidden = false;
 	  		var expanded = false;
 
@@ -661,21 +704,27 @@ $(function() {
 
 	  		//for every season in the show
 	  		for (var j = 0; j < seasons.length; j++){
+	  			
 	  			var season = seasons[j];
+	  			
 	  			//for every episode in the season
 	  			for (var k = 0; k < season.length; k++){
+	  				
 	  				var ep = season[k];
+
 	  				//find out if the episode has been seen
 	  				var seen = thisBool.get('array')[j][k];
 
 	  				//print it only if it's unseen
 	  				if (!seen){
-	  					unseenCount++;
-	  					if (unseenCount > queueLimit){
+	  					queuedCount++;
+	  					
+	  					if (queuedCount > queueLimit){
 	  						hidden = true;
 	  					}
-	  					var icon = seen?'check_box_outline_blank':'check_box';
-					  	var episodeTemplate = _.template( $('#episode-template').html() );
+	  					
+	  					var icon = seen ? 'check_box_outline_blank' : 'check_box';
+	  					
 	  					var episodeTemplateData = {
 	  						'show_id' : show_id,
 					        's' : j+1,
@@ -686,8 +735,9 @@ $(function() {
 					        'icon' : icon,
 					        'color' : 'green',
 					        'extra' : hidden,
-					        'hiding': hidden?'none':'inline-block'
+					        'hiding': hidden ? 'none' : 'inline-block'
 	  					};
+
 						$("section#queue #queuecollection li#"+show_id+" p").append( 
 							episodeTemplate(episodeTemplateData) 
 						);
@@ -696,7 +746,7 @@ $(function() {
 	  		}
 
 	  		//if there IS overflow, this is the code that handles the MORE button
-	  		if (unseenCount > queueLimit){
+	  		if (queuedCount > queueLimit){
 
 	  			//show the MORE button
 	  			$("section#queue #queuecollection li#"+show_id+" p").append( 
@@ -704,14 +754,14 @@ $(function() {
 				);
 
 				//and figure out what number goes in it
-	  			var more = String(unseenCount - queueLimit);
+	  			var more = String(queuedCount - queueLimit);
 	  			//and add it
 	  			$("a.more#"+show_id+" span.count").append(more);
 
 	  			//unbind the behavior
 	  			$("a.more").unbind();
 
-	  			//and set click behavior
+	  			//and set MORE click behavior
 	  			$("a.more").click(function(){
 	  				//probably a cleaner way to do this but damned if it don't work
 	  				$('#queuecollection li#'+$(this).attr('id')+" p a.extra").toggle();
@@ -729,16 +779,15 @@ $(function() {
 	  			});
 	  		}
 
-	  		totalUnseen += unseenCount;
 
 	  		//if all seen, don't even show it in the queue
-	  		// console.log(unseenCount);
-	  		if(unseenCount==0){
+	  		// console.log(queuedCount);
+	  		if(queuedCount==0){
 	  			$('#queuecollection li#'+show_id).hide();
 	  		}
 
 	  		//write unseen count to span
-	  		$("span#unseen"+myShows.at(i).get('show_id')).html(unseenCount);
+	  		$("span#unseen"+myShows.at(i).get('show_id')).html(queuedCount);
 	  	}
 
 	  	//unbind queue episode buttons - no duplicate behavior
@@ -749,22 +798,51 @@ $(function() {
 	  		var showid = $(this).attr('data_show');
 	  		var season = $(this).attr('data_season');
 	  		var episode = $(this).attr('data_episode');
+	  		
 	  		toggleSeen($(this), showid, season, episode);
+	  		
 	  		$(this).toggleClass('lighten-3');
+
 	  		if($(this).children('i').html()=='check_box'){
 		  		$(this).children('i').html('check_box_outline_blank');
+		  		update_queued();
 	  		} else {
 		  		$(this).children('i').html('check_box');
+		  		update_queued();
 	  		}
 	  	});
 
-	  	//queue (number) update
-		$("span#totalUnseen").html('('+totalUnseen+')');
+  		update_queued();
+	}
 
-		//if nothing's seen at all, go to 'empty'
-		if (totalUnseen == 0){
-			goToTab('empty');
-		}
+	function update_queued(){
+		$("span#totalQueued").html(calculate_queued());
+	}
+
+	function calculate_queued(){
+		var num = 0;
+		_.each(myBools.models, function(obj){
+			_.each(obj.get('array'), function(s){
+				_.each(s, function(e){
+					if(!e){num++};
+				});
+			});
+		});
+		return num;
+	};
+
+	function calculate_queued_per_show(showid){
+		var num = 0;
+		_.each(myBools.models, function(obj){
+			if(obj.get('show_id')){
+				_.each(obj.get('array'), function(s){
+					_.each(s, function(e){
+						if(!e){num++};
+					});
+				});
+			}
+		});
+		return num;
 	}
 
 // manage stuff
@@ -776,6 +854,7 @@ $(function() {
 	}
 
 	function manage_render(){
+
 		if (myBools.length != myShows.length){ return; }
 		if (myBools.length == 0 || myShows.length == 0){ return; }
 
@@ -801,6 +880,12 @@ $(function() {
 			);
 			// console.log(myShows.at(i).get('episodes'));
 			var manage_details_data = {
+				name : thisShow.get('name'),
+				classification	: thisShow.get('classification'),
+				country	: thisShow.get('country'),
+				started	: thisShow.get('started'),
+				ended	: thisShow.get('ended'),
+				status	: thisShow.get('status'),
 		        episodes : thisShow.get('episodes'),
 		        num_seasons : thisShow.get('episodes').length,
 		        showid : thisShow.get('show_id')
@@ -840,18 +925,6 @@ $(function() {
 						episodeTemplate(episodeTemplateData) 
 					);
 				}
-				if(seenThisSeason==thisSeason.length){
-					//empty season
-					$('#'+show_id+'x'+j+'dot').html('radio_button_unchecked');
-					$('#'+show_id+'x'+j+'dot').addClass('grey-text');
-				} else if (seenThisSeason==0){
-					//full season
-					$('#'+show_id+'x'+j+'dot').html('lens');
-					$('#'+show_id+'x'+j+'dot').addClass('green-text');
-				} else {
-					$('#'+show_id+'x'+j+'dot').html('timelapse');
-					$('#'+show_id+'x'+j+'dot').addClass('light-green-text');
-				}
 			}
 		}
 
@@ -870,13 +943,16 @@ $(function() {
 	  		} else {
 		  		$(this).children('i').html('check_box');
 	  		}
+	  		queue_render();
+			update_lenses(myBools);
 	  	});
 		
 		//initialize all tabs
 		$('ul.tabs').tabs();
 		$('.manage-item-details').hide();
-		var expanded = false;
+		
 		//expand click behaviors
+		var expanded = false;
 		$('section#manage a#expand').click(function(){
 			var showid = $(this).attr('data_id') 
 			// console.log(showid);
@@ -890,6 +966,135 @@ $(function() {
 			}
 		});
 
+		$('section#manage a#delete').click(function(){
+			var showid = $(this).attr('data_id');
+			var name = $(this).attr('data_name');
+			manage_delete(showid,name);
+		});
+
+		$('section#manage a#reset').click(function(){
+			var showid = $(this).attr('data_id');
+			var name = $(this).attr('data_name');
+			manage_reset(showid,name);
+		});
+
+		$('section#manage a#set').click(function(){
+			var showid = $(this).attr('data_id');
+			var name = $(this).attr('data_name');
+			manage_set(showid,name);
+		});
+
+		update_lenses(myBools);
+
+	}
+
+	function manage_delete(showid, name){
+		var boolsObject = Parse.Object.extend("Bools");
+		var boolsQuery = new Parse.Query(boolsObject);
+		boolsQuery.equalTo("show_id", parseInt(showid));
+		boolsQuery.find({
+			success: function(results){
+				_.first(results).destroy({
+					success: function(){
+						pushAlert('Deleted.');
+						getMyBools();
+						queue_render();
+						update_queued();
+					}, 
+					error: function(){
+
+					}
+				});
+			}
+		});
+	}
+
+	function manage_reset(showid, name){
+		// console.log(myBools);
+		for(var i = 0; i < myBools.length; i++){
+			if(myBools.at(i).get('show_id') == showid){
+				// console.log(myBools.at(i).get('array'));
+				var tempArray = myBools.at(i).get('array');
+				for(var j = 0; j < tempArray.length; j++){
+					for(var k = 0; k < tempArray[j].length; k++){
+						tempArray[j][k] = false;
+					}
+				}
+				myBools.at(i).set('array', tempArray);
+				myBools.at(i).save();
+				getMyBools();
+				queue_render();
+				update_queued();
+				pushAlert('Queued all episodes of ' + name + '.');
+			}
+		}
+	}
+
+	function manage_set(showid, name){
+		console.log(name);
+		// console.log(myBools);
+		for(var i = 0; i < myBools.length; i++){
+			if(myBools.at(i).get('show_id') == showid){
+				// console.log(myBools.at(i).get('array'));
+				var tempArray = myBools.at(i).get('array');
+				for(var j = 0; j < tempArray.length; j++){
+					for(var k = 0; k < tempArray[j].length; k++){
+						tempArray[j][k] = true;
+					}
+				}
+				myBools.at(i).set('array', tempArray);
+				myBools.at(i).save();
+				getMyBools();
+				queue_render();
+				update_queued();
+				pushAlert('Marked all episodes of ' + name + ' as seen.');
+			}
+		}
+	}
+
+	function update_lenses(myBools){
+		// console.log(myBools.length);
+		for(var i = 0; i < myBools.length; i++){
+			thisBool = myBools.at(i);
+			var show_id = thisBool.get('show_id');
+			for(var j = 0; j < thisBool.get('array').length; j++){
+				thisSeason = thisBool.get('array')[j];
+				// console.log(thisSeason);
+				var seenThisSeason = 0;
+				for(var k = 0; k < thisSeason.length; k++){
+					if(thisSeason[k]){seenThisSeason++;}
+				}
+				// console.log(seenThisSeason);
+				if (seenThisSeason==thisSeason.length){
+					//empty season
+					$('#'+show_id+'x'+j+'dot').html('radio_button_unchecked');
+					$('#'+show_id+'x'+j+'dot').removeClass('green-text light-green-text');
+					$('#'+show_id+'x'+j+'dot').addClass('grey-text');
+				} else if (seenThisSeason==0){
+					//full season
+					$('#'+show_id+'x'+j+'dot').html('lens');
+					$('#'+show_id+'x'+j+'dot').removeClass('grey-text light-green-text');
+					$('#'+show_id+'x'+j+'dot').addClass('green-text');
+				} else {
+					$('#'+show_id+'x'+j+'dot').html('timelapse');
+					$('#'+show_id+'x'+j+'dot').removeClass('grey-text green-text');
+					$('#'+show_id+'x'+j+'dot').addClass('light-green-text');
+				}
+			}
+		}
+
+		// if (seenThisSeason==season.length){
+		// 	//empty season
+		// 	$('#'+show_id+'x'+j+'dot').html('radio_button_unchecked');
+		// 	$('#'+show_id+'x'+j+'dot').addClass('grey-text');
+		// } else if (seenThisSeason==0){
+		// 	//full season
+		// 	$('#'+show_id+'x'+j+'dot').html('lens');
+		// 	$('#'+show_id+'x'+j+'dot').addClass('green-text');
+		// } else {
+		// 	$('#'+show_id+'x'+j+'dot').html('timelapse');
+		// 	$('#'+show_id+'x'+j+'dot').addClass('light-green-text');
+		// }
 	}
 
 
