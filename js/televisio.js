@@ -16,6 +16,8 @@ $(function() {
 	var queueLimit = 3;
 	var _MS_PER_DAY = 1000 * 60 * 60 * 24; //stuff for date handling, from SE
 	var today = Date.today();
+	var longTime = 5000;
+	var shortTime = 3000;
 	// console.log(today);
 	//onboarding, empty, queue, add, manage
 
@@ -68,7 +70,7 @@ $(function() {
 	function checkUser(){
 		if (Parse.User.current()) {
 			//we're logged in
-			pushAlert('Hi, ' + Parse.User.current().attributes.username + '!');
+			pushAlert('Hi, ' + capitalizeFirstLetter(Parse.User.current().attributes.username) + '!');
 			//if we're logged in, feed in the bools / shows data
 			getMyBools();
 	        
@@ -76,7 +78,7 @@ $(function() {
 	        $('#logio').click(function(){
 	        	var oldUsername = Parse.User.current().attributes.username;
 	        	logMeOut();
-	        	pushAlert("Bye, "+oldUsername+"!");
+	        	pushAlert("Bye, " + capitalizeFirstLetter(oldUsername) + "!");
 	        });
 
 	        $('#whoami').show();
@@ -858,6 +860,9 @@ $(function() {
 		if (myBools.length != myShows.length){ return; }
 		if (myBools.length == 0 || myShows.length == 0){ return; }
 
+		if (myBools.length > 15){
+			pushAlert('For best performance, remove shows that are off the air.', longTime);
+		}
 		// console.log('tests passed, rendering manage afresh');
 
 	  	var manage_template = _.template( $('#manage-item-template').html() );
@@ -1115,8 +1120,12 @@ $(function() {
 
 
 	//pushes an alert to the box in the corner
-	function pushAlert(str){
-	  Materialize.toast(str, 3000);
+	function pushAlert(str, num){
+		if(!_.isUndefined(num)){
+			Materialize.toast(str, num);
+		} else {
+			Materialize.toast(str, shortTime);			
+		}
 	}
 
 	function createArray(length) {
@@ -1140,6 +1149,10 @@ $(function() {
 	function hasItAired(date){
 		var parsed = Date.parse(date);
 		// console.log(parsed);
+	}
+
+	function capitalizeFirstLetter(string) {
+	    return string.charAt(0).toUpperCase() + string.slice(1);
 	}
 
 });
