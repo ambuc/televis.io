@@ -78,7 +78,10 @@
 			/*box-shadow: none;*/
 		}
 	/*better padding for episodes*/
-		.episode{
+		section#queue a{
+			margin-bottom:5px;
+		}
+		section#manage a{
 			margin-bottom:5px;
 		}
 

@@ -1,114 +1,50 @@
-/**
-	here's how we're gonna do it: get the data raw from TVRage API and process it into a usable state
-
-	then keep a separate //ARRAY// of user data: 
-		show id numbers
-			season / episode coordinates
-				booleans for seen/unseen
-
-**/
+//TODO
+//airdate-dependent coloring and presentation
+//maybe visually display boolean creation - time to create means they won't close the page
+//test at larger scales
+//ability to load in new tvrage data and flexibly expand boolean arrays
+//refresh after show add, please
+//partial caught up feature
+//calendar
 
 $(function() {
 	
 	Parse.$ = jQuery; //reassign jQuery, god knows why
 	Parse.initialize("CI4kTSt4LME3DQopwCpnh4E4yEFwr0fEwYpAeNuF", "kh8MdcK8IcQnTMXzCmUvogxdREWP7eyRv4VGQoVG"); //initialize with login keys
 
-	var Show = Parse.Object.extend("Show",{
-		defaults:{
-			"classification" : null,
-			"country"		 : null,
-			"started"		 : null,
-			"ended"			 : null,
-			"name"			 : null,
-			"show_id"		 : null,
-			"status"		 : null,
-			"num_seasons"    : null,
-			"episodes"		 : [],
-			"genres"		 : []
-		},
-		initialize: function(){
-
-		},
-		ask: function(s, e){
-
-		},
-		toggle: function(s, e){
-
-		}
-	});
-
-	var Bools = Parse.Object.extend("Bools",{
-		defaults:{
-			'show_id': null,
-			'seasons': null,
-		    'array': 	null,
-		    user:   Parse.User.current()
-		    // ACL:    new Parse.ACL(Parse.User.current())
-		}, 
-		initialize: function(){
-			this.set({
-				array: createArray(this.get('seasons'),0)
-			});
-		},
-		ask: function(s, e){
-			return this.array[s][e];
-		},
-		toggle: function(s, s){
-			this.array[s][e] = !this.array[s][e];
-		}, 
-		seen: function(s, e){
-			this.array[s][e] = true;
-		},
-		unseen: function(s, e){
-			this.array[s][e] = false;
-		}
-	});
-
-	var tab = '';
 	var xhr; //one xhr request at a time, friend
-	var defaultTab = 'add'; //which tab to open on
-
-
-	//onboarding, empty, queue, add, settings
+	var currentTab = '';
+	var defaultTab = 'manage'; //which tab to open on
+	var queueLimit = 3;
+	var _MS_PER_DAY = 1000 * 60 * 60 * 24; //stuff for date handling, from SE
+	var today = Date.today();
+	// console.log(today);
+	//onboarding, empty, queue, add, manage
 
 	//things to do only once, on startup
 	$(document).ready(function() {
 		
+		initializeTabs(); //click behavior
+		goToTab(defaultTab); //initial homepage is queue
+		checkUser(); //if logged in, get info. if not, present onboarding
+	});
+
+//tab stuff
+
+	//jquery behavior for tab drawing
+	function initializeTabs(){
 		$('#tabsblock a').click(function(){
 			goToTab($(this).attr('id'));
 		});
-
-		goToTab(defaultTab); //initial homepage is queue
-		update_navbar_user_stuff();
-		getMyShows();
-
-	});
-
-	function getMyShows(){
-		var boolsObject = Parse.Object.extend("Bools");
-		var boolsQuery = new Parse.Query(boolsObject);
-		// boolsQuery.equalTo("playerName", "Dan Stemkoski");
-		boolsQuery.find({
-			success: function(results){
-				console.log('success!');
-				console.log(results);
-			}
-		});
 	}
-
-	//i want to keep separate PARSE items on the backend, but have a total array (backbone collection?) on the frontend which i can call from. maybe i should just be saving that? fuck.
-
-
-
-//tab stuff
 
 	//navigates to a tab, and changes the .navtabs appearance to match.
 	function goToTab(str){
 		// console.log('was on ' + tab + ' now on ' + str)
-		if (str == tab) {
+		if (str == currentTab) {
 			return;
 		} else {
-			tab = str;
+			currentTab = str;
 			$('main section').hide();
 			$('section#'+str).show();
 			$('.navtabs a').removeClass('btn-large');
@@ -118,18 +54,56 @@ $(function() {
 				add_stage_a();
 			} else if (str == 'onboarding'){
 				onboarding_init();
+			} else if (str == 'empty'){
+				empty_init();
+			} else if (str == 'queue'){
+				queue_init();
+			} else if (str == 'manage'){
+				manage_init();
 			}
 		}
 	}
 
+// navbar stuff
+
+	function checkUser(){
+		if (Parse.User.current()) {
+			//we're logged in
+			pushAlert('Hi, ' + Parse.User.current().attributes.username + '!');
+			//if we're logged in, feed in the bools / shows data
+			getMyBools();
+	        
+	        $('#logio').show();
+	        $('#logio').click(function(){
+	        	var oldUsername = Parse.User.current().attributes.username;
+	        	logMeOut();
+	        	pushAlert("Bye, "+oldUsername+"!");
+	        });
+
+	        $('#whoami').show();
+	        $('#whoami span').text(Parse.User.current().attributes.username);
+	        $('#whoami').click(function(){
+	        	goToTab('manage');
+	        });    		
+		} else {
+			//we're logged out
+	        $('#logio').hide();
+	        $('#whoami').hide();
+			goToTab('onboarding');
+		}
+	}
+
+//login stuff
+
 	function logMeOut(){
 		Parse.User.logOut();
+		$('#totalUnseen').empty();
         $('#logio').hide();
         $('#whoami').hide();
 		goToTab('onboarding');
 	}
 
-// onboarding
+// onboarding section behaviors
 
 	function onboarding_switch(stage){
 		$('section#onboarding .card-content').hide();
@@ -204,11 +178,11 @@ $(function() {
 	function onboarding_parse(username, password, mode){
 		if (mode == 'Sign Up'){
 			// console.log('signing up: username:' + username + ' password:'+password);
-			Parse.User.signUp(username, password, { ACL: new Parse.ACL() }, {
+			Parse.User.signUp(username, password, { ACL: new Parse.ACL(), shows : 0 }, {
 		        success: function(user) {
-		        	pushAlert('successful signup');
-		        	update_navbar_user_stuff();
-		        	goToTab('empty');
+		        	pushAlert('Successfully Signed Up As \'' + username + '\'');
+		        	checkUser();
+		        	goToTab('queue');
 		        },
 
 		        error: function(user, error) {
@@ -220,10 +194,10 @@ $(function() {
 			// console.log('logging in: username:' + username + ' password:'+password);
 			Parse.User.logIn(username, password, {
 		        success: function(user) {
-		        	console.log('success login');
-		        	update_navbar_user_stuff();
+		        	// console.log('success login');
+		        	checkUser();
 		        	// ^ this toasts
-		        	goToTab('empty');
+		        	goToTab('queue');
 		        },
 
 		        error: function(user, error) {
@@ -240,33 +214,8 @@ $(function() {
 		$('section#onboarding input#username').focus();
 	}
 
-// navbar
 
-	function update_navbar_user_stuff(){
-		if (Parse.User.current()) {
-			//we're logged in
-			pushAlert('Logged in as @' + Parse.User.current().attributes.username + '.');
-	        
-	        $('#logio').show();
-	        $('#logio').click(function(){
-	        	logMeOut();
-	        	pushAlert("Logged out.");
-	        });
-
-	        $('#whoami').show();
-	        $('#whoami span').text(Parse.User.current().attributes.username);
-	        $('#whoami').click(function(){
-	        	goToTab('settings');
-	        });    		
-		} else {
-			//we're logged out
-	        $('#logio').hide();
-	        $('#whoami').hide();
-			goToTab('onboarding');
-		}
-	}
-
-// add
+// add section behavior
 
 	function add_cancel(){
 		add_switch('a');
@@ -368,16 +317,16 @@ $(function() {
 	function add_stage_d(show){
 		add_switch('d');
 		$('#add-content-d h5 b').text(show['name']);
-		console.log(show);
+		// console.log(show);
 
 		$('div#add-content-d a#full').click(function(){
-			tryShow(show, true);
+			addShow(show, true);
 		});
 		$('div#add-content-d a#part').click(function(){
 			add_stage_e(show);
 		});
 		$('div#add-content-d a#empty').click(function(){
-			tryShow(show, true);
+			addShow(show, false);
 		});
 	}
 
@@ -385,20 +334,134 @@ $(function() {
 	function add_stage_e(show){
 	}
 
-// try and create SHOW models
 
-	function tryShow(showObj, seen){
+// empty section behavior
+
+	function empty_init(){
+		$('section#empty .card-action a#add').click(function(){
+			goToTab('add');
+		});
+	}
+
+// BOOLS model behavior
+
+	var Bools = Parse.Object.extend("Bools",{
+		defaults:{
+			'show_id': null,
+			'seasons': null,
+		    'array': 	null,
+		    user:   Parse.User.current()
+		    // ACL:    new Parse.ACL(Parse.User.current())
+		}, 
+		initialize: function(){
+			this.set({
+				array: createArray(this.get('seasons'),0)
+			});
+		}
+	});
+
+	function tryBools(showModel, seen){
+
+		var query = new Parse.Query(Parse.Object.extend("Bools"));
+		
+		query.equalTo("show_id", parseInt(showModel.get('show_id')));
+		query.equalTo("user", Parse.User.current());
+		
+		query.find({
+		  success: function(results) {
+		  	// console.log('Got results from the parse query. Here:');
+		  	// console.log(results);
+
+		  	//if the show doesn't exist, make our own
+
+		  	if (results.length == 0){
+			    // console.log("Didn't find any boolean results. Creating own.");
+				var temp = new Bools({
+					'show_id' : parseInt(showModel.get('show_id')),
+					'seasons' : parseInt(showModel.get('num_seasons'))
+				});
+
+
+				// console.log('empty is ' + status);
+				// console.log('loooking for episodes')
+				// console.log(showModel.get('episodes'));
+
+				var eps = showModel.get('episodes');
+				var array = createArray(temp.get('seasons'),0);
+				for (var i = 0; i < eps.length; i++){
+					for (var j = 0; j < eps[i].length; j++){
+						// console.log('setting: ' + i + j + seen)
+						array[i][j] = seen;
+					}
+				}
+
+				temp.set({
+					'array' : array
+				});
+
+				temp.save({
+					success: function(){
+						// console.log('Successfully created a BOOLS with id: ' + showModel.get('show_id') + '.');
+					},
+					error: function(error){
+						// console.log('Didn\'t Save Bools');
+						// console.log(error);
+						// console.log('error.code ' + error.code + error.message);
+
+					}
+				});
+
+		  	} else { //if it does, use it
+
+			    // console.log("Successfully retrieved " + results.length + " bools. Here's the first.");
+			    var result = _.first(results);
+			    // console.log(result);
+		  	}
+		  },
+		  error: function(error) {
+		    // console.log("Error: " + error.code + " " + error.message);
+		  }
+		});
+	}
+
+// show model behavior
+
+	var Show = Parse.Object.extend("Show",{
+		defaults:{
+			"classification" : null,
+			"country"		 : null,
+			"started"		 : null,
+			"ended"			 : null,
+			"name"			 : null,
+			"show_id"		 : null,
+			"status"		 : null,
+			"num_seasons"    : null,
+			"episodes"		 : [],
+			"genres"		 : []
+		},
+		initialize: function(){
+
+		},
+		ask: function(s, e){
+
+		},
+		toggle: function(s, e){
+
+		}
+	});
+
+	function addShow(showObj, seen){
 		//determine if the show exists or not
 		//and create it if it does
 		var query = new Parse.Query(Parse.Object.extend("Show"));
 		query.equalTo("show_id", parseInt(showObj.showid));
 		query.find({
 		  success: function(results) {
-		  	console.log('Got results from the parse query. Here they are.');
-		  	console.log(results);
+		  	// console.log('Got results from the parse query. Here they are.');
+		  	// console.log(results);
 		  	//if the show doesn't exist
 		  	if (results.length == 0){
-			    console.log("Didn't find any. Creating own.");
+			    // console.log("Didn't find any. Creating own.");
 				var showModel = new Show({
 					'show_id' : parseInt(showObj.showid),
 					'num_seasons' : parseInt(showObj.seasons),
@@ -413,44 +476,44 @@ $(function() {
 					success: function(){
 			    		add_switch('a');
 			    		pushAlert("Added '"+showModel.get('name')+"'.");
-						getEpisodes(showModel, seen);
+						fetchEps(showModel, seen);
 					},
 					error: function(error){
-						console.log('Didn\'t Save Show');
-						console.log(error);
-						console.log('error.code ' + error.code + error.message);
+						// console.log('Didn\'t Save Show');
+						// console.log(error);
+						// console.log('error.code ' + error.code + error.message);
 					}
 				});
 
 		  	} else { //if it does already exist
 
-			    console.log("Successfully retrieved " + results.length + " scores. Here's the first.");
+			    // console.log("Successfully retrieved " + results.length + " scores. Here's the first.");
 			    
 			    var showModel = _.first(results);
-	    		getEpisodes(showModel, seen);
+	    		fetchEps(showModel, seen);
 			    
-			    console.log(showModel);
+			    // console.log(showModel);
 	    		
 	    		add_switch('a');
 	    		pushAlert("Added '"+showModel.get('name')+"'.")
 		  	}
 		  },
 		  error: function(error) {
-		    console.log("Error: " + error.code + " " + error.message);
+		    // console.log("Error: " + error.code + " " + error.message);
 		  }
 		});
 	}
 
 // episodes handling functions
 
-	function getEpisodes(showModel, seen){
-		console.log('getting episodes by model');
+	function fetchEps(showModel, seen){
+		// console.log('getting episodes by model');
 		$.ajax({
 			url: 'http://www.jbuckland.com/ketchup.php?func=show&query=' + showModel.get('show_id'), 
 			dataType: "json",
 			type: 'GET',
 			success: function(data){
-
+				// console.log(data);
 				processedData = processEpisodes(data);
 
 				showModel.set('episodes', processedData);
@@ -458,13 +521,16 @@ $(function() {
 
 				tryBools(showModel, seen);
 
+			},
+			error: function(error){
+				// console.log(error);
 			}
 		});
 	}
 
 	function processEpisodes(data){
-		console.log(data);
-		console.log('processing episodes');
+		// console.log(data);
+		// console.log('processing episodes');
 		var result = [];
 		if ( data.totalseasons == 1 ){ //weird case
 			result[0] = [];
@@ -490,73 +556,358 @@ $(function() {
 		return result;
 	}
 
-// try and create BOOLS models
+// parse collections
 
-	function tryBools(showModel, seen){
+	var BoolsCollection = Parse.Collection.extend({
+		model: Bools,
+		initialize : function(){
+			// console.log('initialize boolsCollection');
+		}
+	});
 
-		var query = new Parse.Query(Parse.Object.extend("Bools"));
-		
-		query.equalTo("show_id", parseInt(showModel.get('show_id')));
-		query.equalTo("user", Parse.User.current());
-		
-		query.find({
-		  success: function(results) {
-		  	console.log('Got results from the parse query. Here:');
-		  	console.log(results);
+	var ShowsCollection = Parse.Collection.extend({
+		model: Show,
+		comparator: function(model){
+			return model.get('name');
+		},
+		initialize : function(){
+			// console.log('initialize showsCollection');
+		}
+	});
 
-		  	//if the show doesn't exist, make our own
+	var myBools = new BoolsCollection;
+	var myShows = new ShowsCollection;
 
-		  	if (results.length == 0){
-			    console.log("Didn't find any boolean results. Creating own.");
-				var temp = new Bools({
-					'show_id' : parseInt(showModel.get('show_id')),
-					'seasons' : parseInt(showModel.get('num_seasons'))
+//bools fetcher
+
+	function getMyBools(){
+		var boolsObject = Parse.Object.extend("Bools");
+		var boolsQuery = new Parse.Query(boolsObject);
+		boolsQuery.equalTo("user", Parse.User.current());
+		boolsQuery.find({
+			success: function(results){
+				myBools.reset();
+				myShows.reset();
+				_.each(results, function(result, index){
+					myBools.add(result);
+					// console.log(index);
+					getSingleShow(result.get('show_id'), index);
 				});
-
-
-				// console.log('empty is ' + status);
-				// console.log('loooking for episodes')
-				// console.log(showModel.get('episodes'));
-
-				var eps = showModel.get('episodes');
-				var array = createArray(temp.get('seasons'),0);
-				for (var i = 0; i < eps.length; i++){
-					for (var j = 0; j < eps[i].length; j++){
-						array[i][j] = seen;
-					}
-				}
-
-				temp.set({
-					'array' : array
-				});
-
-				temp.save({
-					success: function(){
-						console.log('Successfully created a BOOLS with id: ' + showModel.get('show_id') + '.');
-					},
-					error: function(error){
-						console.log('Didn\'t Save Bools');
-						console.log(error);
-						console.log('error.code ' + error.code + error.message);
-
-					}
-				});
-
-		  	} else { //if it does, use it
-
-			    console.log("Successfully retrieved " + results.length + " bools. Here's the first.");
-			    var result = _.first(results);
-			    console.log(result);
-		  	}
-		  },
-		  error: function(error) {
-		    console.log("Error: " + error.code + " " + error.message);
-		  }
+			}
 		});
 	}
 
+	function getSingleShow(id, index){
+		var showsObject = Parse.Object.extend("Show");
+		var showsQuery = new Parse.Query(showsObject);
+		// console.log(id);
+		showsQuery.equalTo("show_id", parseInt(id));
+		showsQuery.find({
+			success: function(results){
+				var result = _.first(results);
+				myShows.add(result);
+				// console.log('index' + index);
+				if(currentTab == 'queue'){
+					queue_render();
+				} else if (currentTab == 'manage'){
+					manage_render();
+				}
+			}
+		});
+	}
 
-//general use
+// queue stuff
+
+	function queue_init(){
+		// console.log('initializing queue');
+		queue_render();
+	}
+
+	function queue_render(){
+		if (myBools.length != myShows.length){ return; }
+		if (myBools.length == 0 || myShows.length == 0){ return; }
+		// console.log('tests passed, rendering queue afresh');
+
+		//these are queue-specific
+		var totalUnseen = 0;
+	  	var showTemplate = _.template( $('#queue-item-template').html() );
+		
+		//empty the queue
+		$("section#queue #queuecollection").empty();
+	  	
+	  	//for every show
+	  	for (var i = 0; i < myShows.length; i++){
+	  		
+	  		var showTemplateData = {
+		        showname : myShows.at(i).get('name'),
+		        unseen : 0,
+		        shade : 'green',
+		        showid : myShows.at(i).get('show_id')
+		  	};
+
+			$("section#queue #queuecollection").append( 
+				showTemplate(showTemplateData) 
+			);
+
+			//these are all show-specific
+		  	var show_id = myShows.at(i).get('show_id');
+	  		var seasons = myShows.at(i).get('episodes');
+	  		var unseenCount = 0;
+	  		var hidden = false;
+	  		var expanded = false;
+
+		  	//this performs a search so that we don't have to later
+	  		var thisBool = _.find(myBools.models, function(item){ return item.get('show_id') === show_id; });
+
+	  		//for every season in the show
+	  		for (var j = 0; j < seasons.length; j++){
+	  			var season = seasons[j];
+	  			//for every episode in the season
+	  			for (var k = 0; k < season.length; k++){
+	  				var ep = season[k];
+	  				//find out if the episode has been seen
+	  				var seen = thisBool.get('array')[j][k];
+
+	  				//print it only if it's unseen
+	  				if (!seen){
+	  					unseenCount++;
+	  					if (unseenCount > queueLimit){
+	  						hidden = true;
+	  					}
+	  					var icon = seen?'check_box_outline_blank':'check_box';
+					  	var episodeTemplate = _.template( $('#episode-template').html() );
+	  					var episodeTemplateData = {
+	  						'show_id' : show_id,
+					        's' : j+1,
+					        'e' : pad(k+1, 2),
+					        'j' : j,
+					        'k' : k,
+					        'title' : ep.title,
+					        'icon' : icon,
+					        'color' : 'green',
+					        'extra' : hidden,
+					        'hiding': hidden?'none':'inline-block'
+	  					};
+						$("section#queue #queuecollection li#"+show_id+" p").append( 
+							episodeTemplate(episodeTemplateData) 
+						);
+	  				}
+	  			}
+	  		}
+
+	  		//if there IS overflow, this is the code that handles the MORE button
+	  		if (unseenCount > queueLimit){
+
+	  			//show the MORE button
+	  			$("section#queue #queuecollection li#"+show_id+" p").append( 
+					"<a class='btn grey more' id="+show_id+"><i class='material-icons left'>expand_more</i><span class='text'><span class='count'></span> more</span></a>"
+				);
+
+				//and figure out what number goes in it
+	  			var more = String(unseenCount - queueLimit);
+	  			//and add it
+	  			$("a.more#"+show_id+" span.count").append(more);
+
+	  			//unbind the behavior
+	  			$("a.more").unbind();
+
+	  			//and set click behavior
+	  			$("a.more").click(function(){
+	  				//probably a cleaner way to do this but damned if it don't work
+	  				$('#queuecollection li#'+$(this).attr('id')+" p a.extra").toggle();
+	  				if (expanded == false){
+		  				$(this).children('i').html('expand_less');
+		  				$(this).children('i').toggleClass('left');
+		  				$(this).children('span.text').hide();
+		  				expanded = true;
+	  				} else {
+		  				$(this).children('i').html('expand_more');	
+		  				$(this).children('i').toggleClass('left');
+		  				$(this).children('span.text').show();
+		  				expanded = false;
+	  				}
+	  			});
+	  		}
+
+	  		totalUnseen += unseenCount;
+
+	  		//if all seen, don't even show it in the queue
+	  		// console.log(unseenCount);
+	  		if(unseenCount==0){
+	  			$('#queuecollection li#'+show_id).hide();
+	  		}
+
+	  		//write unseen count to span
+	  		$("span#unseen"+myShows.at(i).get('show_id')).html(unseenCount);
+	  	}
+
+	  	//unbind queue episode buttons - no duplicate behavior
+	  	$("section#queue a.episode").unbind();
+
+	  	//toggle on click - model and view
+	  	$("section#queue a.episode").click(function(){
+	  		var showid = $(this).attr('data_show');
+	  		var season = $(this).attr('data_season');
+	  		var episode = $(this).attr('data_episode');
+	  		toggleSeen($(this), showid, season, episode);
+	  		$(this).toggleClass('lighten-3');
+	  		if($(this).children('i').html()=='check_box'){
+		  		$(this).children('i').html('check_box_outline_blank');
+	  		} else {
+		  		$(this).children('i').html('check_box');
+	  		}
+	  	});
+
+	  	//queue (number) update
+		$("span#totalUnseen").html('('+totalUnseen+')');
+
+		//if nothing's seen at all, go to 'empty'
+		if (totalUnseen == 0){
+			goToTab('empty');
+		}
+	}
+
+// manage stuff
+
+	function manage_init(){
+		// console.log('initializing manage');
+		// console.log(myShows);
+		manage_render();	
+	}
+
+	function manage_render(){
+		if (myBools.length != myShows.length){ return; }
+		if (myBools.length == 0 || myShows.length == 0){ return; }
+
+		// console.log('tests passed, rendering manage afresh');
+
+	  	var manage_template = _.template( $('#manage-item-template').html() );
+	  	var manage_details_template = _.template( $('#manage-details-template').html() );
+		$("section#manage #managecollection").empty();
+		for (var i = 0; i < myShows.length; i++){
+			var thisShow = myShows.at(i);
+		  	var show_id = thisShow.get('show_id');
+	  		var thisBool = _.find(myBools.models, function(item){ return item.get('show_id') === show_id; });
+	  		var manage_data = {
+		        showname : thisShow.get('name'),
+		        unseen : 0,
+		        shade : 'green',
+		        showid : thisShow.get('show_id'),
+		        num_seasons : thisShow.get('episodes').length
+		  	};
+		  	// console.log('appending showtemplate');
+			$("section#manage #managecollection").append( 
+				manage_template(manage_data) 
+			);
+			// console.log(myShows.at(i).get('episodes'));
+			var manage_details_data = {
+		        episodes : thisShow.get('episodes'),
+		        num_seasons : thisShow.get('episodes').length,
+		        showid : thisShow.get('show_id')
+		  	};
+		  	// console.log('appending showtemplate');
+			$("section#manage #managecollection").append( 
+				manage_details_template(manage_details_data) 
+			);
+			//inject episodes
+			for(var j = 0; j < thisShow.get('episodes').length; j++){
+				var seenThisSeason = 0;
+				var thisSeason = thisShow.get('episodes')[j];
+				for (var k = 0; k < thisSeason.length; k++){
+	  				var seen = thisBool.get('array')[j][k];
+	  				if(seen){seenThisSeason++;}
+					var thisEp = thisSeason[k];
+					// console.log(i+' '+j+' '+k);
+					// console.log(seen);
+					var color = seen?'green lighten-2':'green';
+					var icon = seen?'check_box':'check_box_outline_blank';
+					// console.log(icon);
+					var episodeTemplate = _.template( $('#episode-template').html() );
+  					var episodeTemplateData = {
+  						'showid' : show_id,
+  						'show_id' : show_id,
+				        's' : j+1,
+				        'e' : pad(k+1, 2),
+				        'j' : j,
+				        'k' : k,
+				        'title' : thisEp.title,
+				        'icon' : icon,
+				        'color' : color,
+				        'extra' : false,
+				        'hiding': false
+  					};
+					$('section#manage #managecollection #'+show_id+'x'+j).append( 
+						episodeTemplate(episodeTemplateData) 
+					);
+				}
+				if(seenThisSeason==thisSeason.length){
+					//empty season
+					$('#'+show_id+'x'+j+'dot').html('radio_button_unchecked');
+					$('#'+show_id+'x'+j+'dot').addClass('grey-text');
+				} else if (seenThisSeason==0){
+					//full season
+					$('#'+show_id+'x'+j+'dot').html('lens');
+					$('#'+show_id+'x'+j+'dot').addClass('green-text');
+				} else {
+					$('#'+show_id+'x'+j+'dot').html('timelapse');
+					$('#'+show_id+'x'+j+'dot').addClass('light-green-text');
+				}
+			}
+		}
+
+		//unbind behaviors
+		$("section#manage a.episode").unbind();
+
+		//toggle on click
+	  	$("section#manage a.episode").click(function(){
+	  		var showid = $(this).attr('data_show');
+	  		var season = $(this).attr('data_season');
+	  		var episode = $(this).attr('data_episode');
+	  		toggleSeen($(this), showid, season, episode);
+	  		$(this).toggleClass('lighten-2');
+	  		if($(this).children('i').html()=='check_box'){
+		  		$(this).children('i').html('check_box_outline_blank');
+	  		} else {
+		  		$(this).children('i').html('check_box');
+	  		}
+	  	});
+		
+		//initialize all tabs
+		$('ul.tabs').tabs();
+		$('.manage-item-details').hide();
+		var expanded = false;
+		//expand click behaviors
+		$('section#manage a#expand').click(function(){
+			var showid = $(this).attr('data_id') 
+			// console.log(showid);
+			$(this).parent().parent().next().toggle();
+			if(expanded){ 
+				$(this).children('i').html('expand_more');
+				expanded = false;
+			} else {
+				$(this).children('i').html('expand_less');
+				expanded = true;				
+			}
+		});
+
+	}
+
+
+//general utility functions
+
+	function toggleSeen(element, showid, season, episode){
+  		result = _.first(myBools.filter(function(model){
+  			return model.get('show_id') == showid;
+  		}));
+  		arrayCopy = result.get('array')
+  		currVal = arrayCopy[season][episode]
+  		newVal = !currVal;
+  		arrayCopy[season][episode] = newVal
+  		result.set('array', arrayCopy);
+  		result.save();
+  		// console.log(element)
+	}
+
 
 	//pushes an alert to the box in the corner
 	function pushAlert(str){
@@ -575,5 +926,15 @@ $(function() {
 	    return arr;
 	}
 
+	function pad(n, width, z) {
+		z = z || '0';
+		n = n + '';
+		return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+	}
+
+	function hasItAired(date){
+		var parsed = Date.parse(date);
+		// console.log(parsed);
+	}
 
 });

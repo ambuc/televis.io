@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app>
+<html>
   <head>
     <title>televis.io</title>
 
@@ -18,7 +18,7 @@
     <header>
       <div class="navbar-fixed">
         <nav>
-          <div class="nav-wrapper cyan">
+          <div class="nav-wrapper green darken-1">
             <div class='container'>
               <ul id="nav-mobile" class="left">
                 <li>
@@ -52,20 +52,20 @@
         <div id="tabsblock" class="col l12 m12 s12" style="display: block;">
           <ul class="navtabs center-align row"> 
             <li class="col s4">
-              <a id="add" class="waves-effect cyan lighten-2 white-text btn-large">
+              <a id="add" class="waves-effect green darken-3 white-text btn-large">
                 <i class="material-icons left hide-on-small-only">add</i> Add
               </a>
             </li>
             <li class="col s4">
-              <a id="queue" class="waves-effect cyan white-text btn-large">
+              <a id="queue" class="waves-effect green white-text btn-large">
                 <i class="material-icons left hide-on-small-only">format_list_bulleted</i>
-                Queue (9)
+                Queue <span id='totalUnseen'></span>
               </a>
             </li>
             <li class="col s4">
-              <a id="settings" class="waves-effect cyan darken-2 white-text btn-large">
+              <a id="manage" class="waves-effect green lighten-2 white-text btn-large">
                 <i class="material-icons left hide-on-small-only">settings</i>
-                Settings
+                Manage
               </a>
             </li>
           </ul>
@@ -126,8 +126,7 @@
               <p class='flow-text'>You've watched <i>so</i> much television. But there's always more!</p> 
             </div> 
             <div class="card-action"> 
-              <a class="waves-effect btn green white-text" onclick="goToTab('add');">Add a new show</a> 
-              <a class="waves-effect btn cyan white-text" onclick="goToTab('add');">
+              <a class="waves-effect btn cyan white-text" id='add'>
                 <i class='material-icons left'>edit</i>
                 Add some shows
               </a> 
@@ -137,35 +136,53 @@
 
 <!--    -- -- QUEUE -- -- -->
 
-        <section id="queue" class="col l10 m12 s12">
+        <section id="queue" class="queue col l10 m12 s12">
           <div class='row'>
             <div class='col s12'>
-
-              <ul class="collection">
-                <li class="collection-item avatar">
-                  <span class="badge">2 unseen</span>
-                  <i class="material-icons circle">tv</i>
-                  <span class="title">Hannibal</span>
-                  <p>
-                    <a class='episode btn green lighten-3 white-text'> <i class="material-icons left">check_box</i> 2x09 Apetite </a>
-                    <a class='episode btn green white-text'> <i class="material-icons left">check_box_outline_blank</i> 2x10 Sausages </a>
-                  </p>
-                </li>
-                <li class="collection-item avatar">
-                  <span class="badge">7 unseen</span>
-                  <i class="material-icons circle">tv</i>
-                  <span class="title">Sense8</span>
-                  <p>
-                    <a class='episode btn green white-text'> <i class="material-icons left">check_box_outline_blank</i> 1x01 Pilot </a>
-                    <a class='episode btn green white-text'> <i class="material-icons left">check_box_outline_blank</i> 1x02 Next Episode </a>
-                    <a class='episode btn green white-text'> <i class="material-icons left">check_box_outline_blank</i> 1x02 Then this one </a>
-                    <a class='episode btn grey white-text'> <i class="material-icons left">expand_more</i>and 4 more</a>
-                  </p>
-                </li>
+              <ul class="collection" id='queuecollection'>
+                <div class='center-align'>
+                  <div class="preloader-wrapper big active" style='margin: 30px;'>
+                    <div class="spinner-layer spinner-blue-only">
+                      <div class="circle-clipper left">
+                        <div class="circle"></div>
+                      </div><div class="gap-patch">
+                        <div class="circle"></div>
+                      </div><div class="circle-clipper right">
+                        <div class="circle"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </ul>
             </div>
           </div>
         </section>  
+
+        <script type="text/template" id="queue-item-template">
+          <li class="collection-item avatar" id= <%=showid%> >
+            <i class="material-icons circle">tv</i>
+            <span class="title">
+              <a class='btn-flat white'>
+                <%=showname%>
+              </a>
+              <a class=' secondary-content btn-flat white grey-text'>
+                <span id='unseen<%=showid%>'></span> new
+              </a>
+            </span>
+            <p>
+            </p>
+          </li>
+        </script>
+
+        <script type="text/template" id="episode-template">
+          <a class='episode btn <%=color%> white-text truncate <%=extra?'extra':''%>' style='display:<%=hiding%>;' data_show=<%=show_id%> data_season=<%=j%> data_episode=<%=k%> >
+            <i class="material-icons left"><%=icon%></i>
+            <%=s%>x<%=e%> 
+            <%=title%> 
+          </a>
+        </script>
+
+
 
 <!--    -- -- EDITOR -- -- -->
 
@@ -184,7 +201,7 @@
 
                 <div class="card-content" id='add-content-b'>
                   <h5> Searching for shows titled <b></b> </h5>
-                  <div class="progress pink lighten-4">
+                    <div class="progress pink lighten-4">
                       <div class="indeterminate red darken-2"></div>
                   </div>
                 </div>
@@ -262,119 +279,80 @@
           </div> <!-- row -->
         </section> <!-- add -->
 
-<!--    -- -- SETTINGS -- -- -->
+<!--    -- -- manage -- -- -->
 
-        <section id="settings" class="col l10 m12 s12">
+        <section id="manage" class="col l10 m12 s12">
           <div class='row'>
             <div class='col s12 m12 l12'>
 
-                <div class='row'>
-
-                  <div class='col l3 m2 hide-on-small-only right'>
-                    <div class="card white">
-                      <div class="card-content black-text">
-                        <p class='flow-text'>Sort<span class='hide-on-med-and-down'> By</span>:</p>
-                      </div>
-                      <div class="card-action">
-                        <a class='btn-large btn-flat white black-text'>
-                          <i class='material-icons left'>sort_by_alpha</i>
-                          <span class='hide-on-med-and-down'>Name</span>
-                        </a>
-                        <a class='btn-large btn-flat white black-text'>
-                          <i class='material-icons left'>av_timer</i>
-                          <span class='hide-on-med-and-down'>Date</span>
-                        </a>
-                        <a class='btn-large btn-flat white black-text'>
-                          <i class='material-icons left'>sort</i>
-                          <span class='hide-on-med-and-down'>New</span>
-                        </a>
+              <ul class="collection" id='managecollection'>
+                <div class='center-align'>
+                  <div class="preloader-wrapper big active" style='margin: 30px;'>
+                    <div class="spinner-layer spinner-blue-only">
+                      <div class="circle-clipper left">
+                        <div class="circle"></div>
+                      </div><div class="gap-patch">
+                        <div class="circle"></div>
+                      </div><div class="circle-clipper right">
+                        <div class="circle"></div>
                       </div>
                     </div>
-
-                    
                   </div>
-
-                  <div class='col l9 m10 s12'>
-                    <ul class="collection">
-                      <li class="collection-item avatar">
-                        <i class="material-icons circle green">tv</i>
-                        <div class="title truncate">
-                          <span class='grey-text'>10</span>
-                          It's Always Sunny in Philadelphia
-                        </div>
-
-                        <p>
-                          <i class="material-icons green-text tooltipped" data-position="right" data-delay="50" data-tooltip="Season 1: 100%">lens</i>
-                          <i class="material-icons green-text">lens</i>
-                          <i class="material-icons green-text">lens</i>
-                          <i class="material-icons light-green-text">timelapse</i>
-                          <i class="material-icons grey-text">radio_button_unchecked</i>
-                        </p>
-                        <span class='secondary-content'>
-                          <a class="btn blue">
-                            <i class="material-icons">expand_more</i>
-                          </a>
-                          <a class="btn red lighten-2">
-                            <i class="material-icons">delete</i>
-                          </a>
-                        </span>
-                      </li>
-                      <li class="collection-item grey lighten-3">
-                        <div class="row">
-                          <div class="col s12">
-                            <ul class="tabs grey lighten-3">
-                              <li class="tab col"><a class="active" href="#test1">S1</a></li>
-                              <li class="tab col"><a href="#test2">S2</a></li>
-                              <li class="tab col"><a href="#test3">S3</a></li>
-                            </ul>
-                            <br/>
-                          </div>
-                          <div id="test1" class="col s12">
-                            <a class='episode btn green lighten-3'>
-                              <i class="material-icons left">check_box</i>
-                              1x01 Pilot
-                            </a>
-                            <a class='episode btn green'>
-                              <i class="material-icons left">check_box_outline_blank</i>
-                              1x02 Two
-                            </a>
-                            <a class='episode btn green'>
-                              <i class="material-icons left">check_box_outline_blank</i>
-                              1x03 Three
-                            </a>
-                            <a class='episode btn green'>
-                              <i class="material-icons left">check_box_outline_blank</i>
-                              1x04 Four
-                            </a>
-                            <a class='episode btn green'>
-                              <i class="material-icons left">check_box_outline_blank</i>
-                              1x05 Five
-                            </a>
-                          </div>
-                          <div id="test2" class="col s12">Test 2</div>
-                          <div id="test3" class="col s12">Test 3</div>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                  
                 </div>
-                    
-
-              <!-- <a class='dropdown-button btn' href='#' data-activates='dropdown1'>Drop Me!</a>
-
-              <ul id='dropdown1' class='dropdown-content'>
-                <li><a href="#!">one</a></li>
-                <li><a href="#!">two</a></li>
-                <li class="divider"></li>
-                <li><a href="#!">three</a></li>
-              </ul> -->
-
+              </ul>
 
             </div>
           </div>
 
         </section>
+
+        <script type="text/template" id="manage-item-template">
+          <li class="collection-item avatar manage-item" id=<%=showid%>>
+            <i class="material-icons circle grey lighten-2 grey-text">tv</i>
+            <div class="title truncate">
+              <%=showname%>
+            </div>
+
+            <p>
+            <% for (var i = 0; i < num_seasons; i++){%>
+              <i class="material-icons" id = <%= showid+'x'+String(i)+'dot' %> ></i>
+            <%}%>
+            </p>
+            <span class='secondary-content'>
+              <a class="btn blue" id='expand' data_id=<%=showid%>>
+                <i class="material-icons">expand_more</i>
+              </a>
+              <a class="btn red lighten-1" id='delete'>
+                <i class="material-icons">delete</i>
+              </a>
+            </span>
+          </li>
+        </script>
+
+        <script type="text/template" id="manage-details-template">
+          <li class="collection-item manage-item-details grey lighten-3" id=<%=showid%>>
+            <div class="row">
+              <div class="col s12">
+                <ul class="tabs grey lighten-3">
+                  <%for (var i = 0; i < num_seasons; i++){%>
+                    <li class="tab col">
+                      <a href='#<%=showid+'x'+i%>'>
+                        S<%=i+1%>
+                      </a>
+                    </li>
+                  <%}%>
+                </ul>
+                <br/>
+              </div>
+              <%for(var i = 0; i < num_seasons; i++){%>
+                <div id=<%=showid+'x'+i%> class="col s12">
+                </div>
+              <%}%>
+              
+            </div>
+          </li>
+        </script>
+
       </div>
     </main>
 
