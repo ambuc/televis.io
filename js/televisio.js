@@ -1,17 +1,16 @@
 //TODO
-
-//better handling for queue + manage when EMPTY
-//airdate-dependent coloring and presentation
-//ability to load in new tvrage data and flexibly expand boolean arrays
-//partial caught up feature
-//calendar
+// 1 airdate-dependent coloring and presentation
+// 2 partial caught up feature
+// 3 calendar
+// 4 ability 2 load new data + expand myBools arrays
+// 5 prevent adding duplicates
 
 $(function() {
 	
 	Parse.$ = jQuery; //reassign jQuery, god knows why
 	Parse.initialize("CI4kTSt4LME3DQopwCpnh4E4yEFwr0fEwYpAeNuF", "kh8MdcK8IcQnTMXzCmUvogxdREWP7eyRv4VGQoVG"); //initialize with login keys
 
-//backbone.js stuff. Bools, Show are MODELS, BoolStack and ShowStack are COLLECTIONS
+//backbone.js stuff
 
 	var Bools = Parse.Object.extend("Bools",{
 		defaults:{
@@ -23,7 +22,7 @@ $(function() {
 		}, 
 		initialize: function() {
 			//on initialization, create an array [[],[],[]] of length $seasons
-			console.log(Parse.User.current());
+			// console.log(Parse.User.current());
 			this.set({
 				array: createArray(this.get('seasons'),0)
 			});
@@ -46,8 +45,6 @@ $(function() {
 		initialize: function() {
 		},
 		ask: function(s, e) {
-		},
-		toggle: function(s, e) {
 		}
 	});
 
@@ -68,23 +65,26 @@ $(function() {
 		},
 	});
 
-	var xhr; //one xhr request at a time, friend
-	var currentTab = '';
-	var defaultTab = 'queue'; //which tab to open on
-	var queueLimit = 3;
+//constants
+
+	var xhr; 					// one xhr request at a time, frien
+	var currentTab = ''; 		// which tab we're on
+	var defaultTab = 'manage';  // which tab to open on
+	var queueLimit = 3; 		// num of eps per show in q item
 	var _MS_PER_DAY = 1000 * 60 * 60 * 24; //stuff for date handling, from SE
 	var today = Date.today();
-	var longTime = 5000;
-	var shortTime = 3000;
+	var longTime 	= 5000; //for toasts
+	var shortTime 	= 3000;	//for toasts
 	var myBools = new BoolStack;
 	var myShows = new ShowStack;
 
-	//onboarding, empty, queue, add, manage
+//things to do only once, on startup
 
-	//things to do only once, on startup
 	$(document).ready(function() {
 		console.log('$(document).ready called');
 		tryLogin();
+		stateDetermined('manage', 'thinking');
+		stateDetermined('queue', 'thinking');
 	});
 
 //login stuff
@@ -99,17 +99,16 @@ $(function() {
 	}
 
 	//checks if logged in.
-	//	if so, 	launch
-	//	if not, onboard
 	function tryLogin() {
-		console.log(isLoggedIn());
+		// console.log(isLoggedIn());
 
 		if(isLoggedIn()) {
-			pushAlert('Hi, ' + capitalize(Parse.User.current().attributes.username) + '!');
+			toast('Hi, ' + capitalize(Parse.User.current().attributes.username) + '!');
 			displayTabs(true);	bindTabs(true);
 			displayWings(true);	bindWings(true);
-			launch();
-			// getMyBools();
+			bindEmpties(true);
+			tab_goto(defaultTab);
+			fetchBools();
 		} else {
 			displayTabs(false);		bindTabs(false);
 			displayWings(false);	bindWings(false);
@@ -117,10 +116,11 @@ $(function() {
 		}
 	}
 
+	//tries to log out.
 	function tryLogout() {
 		console.log('tryLogout() called');
 		if(isLoggedIn()) {
-			pushAlert('Bye, ' + capitalize(Parse.User.current().get('username')) + '!');
+			toast('Bye, ' + capitalize(Parse.User.current().get('username')) + '!');
 			Parse.User.logOut();
 
 			displayTabs(false);		bindTabs(false);
@@ -130,12 +130,13 @@ $(function() {
 
 			tab_goto('onboarding');			
 		} else {
-			pushAlert('Already logged out.');
+			toast('Already logged out.');
 		}
 	}
 
 //wings stuff
 
+	//does / doesn't display wings
 	function displayWings(bool) {
 		if(bool) {
 	        $('#logio').show();
@@ -147,6 +148,8 @@ $(function() {
 		    $('#whoami span').empty();
 		}
 	}
+
+	//does / doesn't bind wings behavior
 	function bindWings(bool) {
 		if(bool) {
 			$('#logio').click(function() {
@@ -164,6 +167,7 @@ $(function() {
 
 //tab stuff
 
+	//does / doesn't display tabs
 	function displayTabs(bool) {
 		if(bool) {
 			$('.tabsblock a').show();
@@ -171,6 +175,8 @@ $(function() {
 			$('.tabsblock a').hide();
 		}
 	}
+
+	//does / doesn't bind tab behavior
 	function bindTabs(bool) {
 		if(bool) {
 			$('.tabsblock a').click(function() {
@@ -183,42 +189,56 @@ $(function() {
 
 	//navigates to a tab, and changes the .navtabs appearance to match.
 	function tab_goto(desiredTab) {
-		console.log('tab_goto() called');
+		console.log('tab_goto() ' + desiredTab);
 
 		if (desiredTab == currentTab) {
 			return;
 		} else {
-			currentTab = desiredTab;
 			$('main section').hide();
 			$('section#'+desiredTab).show();
 			tab_recolor(desiredTab);
 			tab_init(desiredTab);
+			currentTab = desiredTab;
+			checkStacks();
 		}
 	}
 
+	//recolors tabs based on which tab was selected
 	function tab_recolor(desiredTab) {
 		$('.navtabs a').removeClass('btn-large darken-2');
 		$('.navtabs a').addClass('btn lighten-1');
 		$('.navtabs a#'+desiredTab).toggleClass('btn btn-large darken-2 lighten-1');
 	}
 
+	//only necessary for tabs with more than one stage - not queue or manage
 	function tab_init(desiredTab) {
 		if (desiredTab == 'add') {
-			add_stage_a();
+			add_ask();
+			//needs to be reset
 		} else if (desiredTab == 'onboarding') {
 			onboarding_init();
-		} else if (desiredTab == 'empty') {
-			empty_init();
-		} else if (desiredTab == 'queue') {
-			queue_render();
-		} else if (desiredTab == 'manage') {
-			manage_init();
+			//needs to be reset
 		}
 	}
 
+//empties stuff
+
+	function bindEmpties(bool){
+		if(bool){
+			$('#manage_empty a#follow').click(function(){
+				tab_goto('add');
+			});
+			$('#queue_empty a#follow').click(function(){
+				tab_goto('add');
+			});
+		} else {
+
+		}
+	}
 
 // onboarding section behaviors
 
+	//switch onboarding views in dom
 	function onboarding_switch(stage) {
 		console.log('onboarding_switch() called');
 
@@ -238,10 +258,10 @@ $(function() {
 		}
 	}
 
+	//initialize onboarding
 	function onboarding_init() {
 		console.log('onboarding_init() called');
 
-		tab_goto('onboarding');
 		onboarding_switch('a');
 		$('section#onboarding .card-action a').unbind();
 		$('section#onboarding .card-action a#login').click(function() {
@@ -252,6 +272,7 @@ $(function() {
 		});
 	}
 
+	//if logging in
 	function onboarding_login() {
 		console.log('onboarding_login() called');
 
@@ -273,6 +294,7 @@ $(function() {
 		});
 	}
 
+	//if signing up
 	function onboarding_signup() {
 		console.log('onboarding_signup() called');
 
@@ -292,20 +314,15 @@ $(function() {
 		});
 	}
 
+	//on GO, collect info and mode and process
 	function onboarding_collect() {
 		console.log('onboarding_collect() called');
 
-		var username = $('section#onboarding input#username').val();
-		var password = $('section#onboarding input#password').val();
-		var mode = $('section#onboarding #entry h5').text();
-		onboarding_parse(username, password, mode);
-	}
-
-	function onboarding_parse(username, password, mode) {
-		console.log('onboarding_parse() called');
+		var username 	= $('section#onboarding input#username').val();
+		var password 	= $('section#onboarding input#password').val();
+		var mode 		= $('section#onboarding #entry h5').text();
 
 		if (mode == 'Sign Up') {
-			// console.log('signing up: username:' + username + ' password:'+password);
 			Parse.User.signUp(username, password, { ACL: new Parse.ACL(), shows : 0 }, {
 		        success: function(user) {
 		        	tryLogin();
@@ -317,23 +334,20 @@ $(function() {
 		        }
 		      });
 		} else if (mode == 'Log In') {
-			// console.log('logging in: username:' + username + ' password:'+password);
 			Parse.User.logIn(username, password, {
 		        success: function(user) {
-		        	// console.log('success login');
 		        	tryLogin();
-		        	// ^ this toasts
 		        	tab_goto('queue');
 		        },
-
 		        error: function(user, error) {
-		        	pushAlert("Invalid username or password. Please try again.");
+		        	toast("Invalid username or password. Please try again.");
 		        	onboarding_try_again();
 		        }
-		     });
+			});
 		}
 	}
 
+	//if failed, try again
 	function onboarding_try_again() {
 		console.log('onboarding_try_again() called');
 
@@ -342,150 +356,63 @@ $(function() {
 		$('section#onboarding input#username').focus();
 	}
 
-	function launch() {
-		tab_goto(defaultTab);
-		getMyBools();
-	}
-
-
-// BOOLS model behavior
-
-	function tryBools(showModel, seen) {
-		console.log('tryBools() called');
-
-		var query = new Parse.Query(Parse.Object.extend("Bools"));
-		
-		query.equalTo("show_id", parseInt(showModel.get('show_id')));
-		query.equalTo("user", Parse.User.current());
-		
-		query.find({
-		  success: function(results) {
-		  	// console.log('Got results from the parse query. Here:');
-		  	// console.log(results);
-
-		  	//if the show doesn't exist, make our own
-
-		  	if (results.length == 0) {
-			    // console.log("Didn't find any boolean results. Creating own.");
-				var temp = new Bools({
-					'show_id' : parseInt(showModel.get('show_id')),
-					'seasons' : parseInt(showModel.get('num_seasons'))
-				});
-
-
-				// console.log('empty is ' + status);
-				// console.log('loooking for episodes')
-				// console.log(showModel.get('episodes'));
-
-				var eps = showModel.get('episodes');
-				var array = createArray(temp.get('seasons'),0);
-				for (var i = 0; i < eps.length; i++) {
-					for (var j = 0; j < eps[i].length; j++) {
-						// console.log('setting: ' + i + j + seen)
-						array[i][j] = seen;
-					}
-				}
-
-				temp.set({
-					'array' : array
-				});
-
-				temp.save({
-					success: function() {
-						var name = showModel.get('name');
-						add_stage_g(name);
-						pushAlert('Successfully added ' + name);
-						getMyBools();
-						// console.log(myBools);
-			    		// manage_render();
-			    		// queue_render();
-	    		  		// update_queued_total();
-					},
-					error: function(error) {
-						// console.log('Didn\'t Save Bools');
-						// console.log(error);
-						// console.log('error.code ' + error.code + error.message);
-
-					}
-				});
-
-		  	} else { //if it does, use it
-
-			    // console.log("Successfully retrieved " + results.length + " bools. Here's the first.");
-			    var result = _.first(results);
-			    getMyBools();
-	    		manage_render();
-	    		queue_render();
-		  		update_queued_total();
-			    // console.log(result);
-		  	}
-		  },
-		  error: function(error) {
-		    // console.log("Error: " + error.code + " " + error.message);
-		  }
-		});
-	}
-
 // show model behavior
 
+	//given a $showObj OBJ and its status $seen,
+	//	look for it on Parse
+	//	if it exists, 
+	//		fetch its eps
+	//	if it doesn't,
+	//		create it and fetch its eps 
+	function tryShow(showObj, seen) {
+		console.log('tryShow() called');
 
-	function addShow(showObj, seen) {
-		console.log('addShow() called');
-
-		//determine if the show exists or not
-		//and create it if it does
 		var query = new Parse.Query(Parse.Object.extend("Show"));
 		query.equalTo("show_id", parseInt(showObj.showid));
 		query.find({
-		  success: function(results) {
-		  	// console.log('Got results from the parse query. Here they are.');
-		  	// console.log(results);
-		  	//if the show doesn't exist
-		  	if (results.length == 0) {
-			    // console.log("Didn't find any. Creating own.");
-				var showModel = new Show({
-					'show_id' : parseInt(showObj.showid),
-					'num_seasons' : parseInt(showObj.seasons),
-					'name' : String(showObj.name),
-					'classification' : String(showObj.classification),
-					'country' : String(showObj.country),
-					'ended' : String(showObj.ended),
-					'started' : String(showObj.started),
-					'status' : String(showObj.status)
-				});
-				showModel.save({
-					success: function() {
-			    		pushAlert("Getting '"+showModel.get('name')+"'...");
-						fetchEps(showModel, seen);
-					},
-					error: function(error) {
-						// console.log('Didn\'t Save Show');
-						// console.log(error);
-						// console.log('error.code ' + error.code + error.message);
-					}
-				});
+		  	success: function(results) {
+			  	if (results.length != 0){ //if the show exists
+			  		var showModel = _.first(results);
+		    		fetchEps(showModel, seen); //async
+		    		toast("Getting '"+showModel.get('name')+"'...")
+			  	} else {//if the show doesn't
+			  		//careful typecasting
+					var showModel = new Show({
+						'show_id'			: parseInt(showObj.showid),
+						'num_seasons'		: parseInt(showObj.seasons),
+						'name'				: String(showObj.name),
+						'classification'	: String(showObj.classification),
+						'country'			: String(showObj.country),
+						'ended'				: String(showObj.ended),
+						'started'			: String(showObj.started),
+						'status'			: String(showObj.status)
+					});
 
-		  	} else { //if it does already exist
-
-			    // console.log("Successfully retrieved " + results.length + " scores. Here's the first.");
-			    
-			    var showModel = _.first(results);
-	    		fetchEps(showModel, seen);
-			    
-			    // console.log(showModel);
-	    		
-	    		// add_switch('a');
-	    		pushAlert("Getting '"+showModel.get('name')+"'...")
+					//save showModel to Parse::Show
+					showModel.save({
+						success: function() {
+				    		toast("Getting '"+showModel.get('name')+"'...");
+							fetchEps(showModel, seen); //async
+						},
+						error: function(error) {
+							toast("Couldn't add show. Something's quite wrong.");
+							toast('Error: ' + error.code + ' ' + error.message);
+						}
+					});
+			  	}
+		  	},
+		  	error: function(error) {
+		  		toast("Couldn't reach Parse. Something's quite wrong.");
+		  		toast("Error: " + error.code + ' ' + error.message);
 		  	}
-		  },
-		  error: function(error) {
-		    // console.log("Error: " + error.code + " " + error.message);
-		  }
 		});
 	}
 
-// episodes handling functions
-
+	//given a $showModel and a status $seen,
+	//	fetch its episodes,
+	//	process them,
+	// 	and .save() them to the $showModel.
+	//	then create a BOOLS of the show.
 	function fetchEps(showModel, seen) {
 		console.log('fetchEps() called');
 
@@ -495,14 +422,9 @@ $(function() {
 			dataType: "json",
 			type: 'GET',
 			success: function(data) {
-				// console.log(data);
-				processedData = processEpisodes(data);
-
-				showModel.set('episodes', processedData);
+				showModel.set('episodes', cleanData(data));
 				showModel.save();
-
 				tryBools(showModel, seen);
-
 			},
 			error: function(error) {
 				// console.log(error);
@@ -510,8 +432,65 @@ $(function() {
 		});
 	}
 
-	function processEpisodes(data) {
-		console.log('processEpisodes() called');
+	//given a $showModel and a status $seen,
+	//	create a user-specifc BOOLS model and .save() it. 
+	function tryBools(showModel, seen) {
+		console.log('tryBools() called');
+
+		var query = new Parse.Query(Parse.Object.extend("Bools"));
+		//two constraints -- $show_id and $user -- UNSCALEABLE, I think
+		query.equalTo("show_id", parseInt(showModel.get('show_id')));
+		query.equalTo("user", Parse.User.current());
+		
+		query.find({
+			success: function(results) {
+			  	//results.length HAS TO BE ZERO
+			  	// if it's not, .destroy() and recreate.
+
+			  	if (results.length != 0){
+			  		_.each(results, function(result){
+			  			result.destroy();
+			  		});
+			  	}
+
+				var newBools = new Bools({
+					'show_id' : parseInt(showModel.get('show_id')),
+					'seasons' : parseInt(showModel.get('num_seasons'))
+				});
+
+				var show 	= showModel.get('episodes');
+				var array 	= createArray(newBools.get('seasons'),0);
+
+				_.each(show, function(season, season_index){
+					_.each(season, function(episode, episode_index){
+						array[season_index][episode_index] = seen;
+					});
+				});
+
+				newBools.set({ 'array' : array });
+
+				newBools.save({
+					success: function() {
+						var name = showModel.get('name');
+						toast('Successfully added ' + name); //toast
+						add_great(name); //view
+						fetchBools(); //model
+					},
+					error: function(error) {
+						toast("There really shouldn't be an error here. Is Parse down?");
+					}
+				});
+
+			},
+			error: function(error) {
+				toast("There really shouldn't be an error here. Is Parse down?");
+			}
+		});
+	}
+
+	// takes a $data OBJ and retuns a nicer $result OBJ
+	function cleanData(data) {
+		console.log('cleanData() called');
 
 		// console.log(data);
 		// console.log('processing episodes');
@@ -542,62 +521,131 @@ $(function() {
 
 //bools fetcher
 
-	function getMyBools() {
-		console.log('getMyBools() called');
+	//resets myBools and myShows
+	//for the current user, 
+	//  finds their BOOl models in the database
+	//  and adds them to myBools
+	//  and fetches each relevant show
+	//  and adds them to myShows
+	function fetchBools() {
+
+		console.log('fetchBools() called');
 
 		var boolsObject = Parse.Object.extend("Bools");
-		var boolsQuery = new Parse.Query(boolsObject);
+		var boolsQuery  = new Parse.Query(boolsObject);
 		boolsQuery.equalTo("user", Parse.User.current());
+		//async
 		boolsQuery.find({
 			success: function(results) {
 				myBools.reset();
 				myShows.reset();
-				_.each(results, function(result, index) {
+				_.each(results, function(result) {
 					myBools.add(result);
-					// console.log(index);
-					getSingleShow(result.get('show_id'), index);
+					fetchShow( result.get('show_id') );
 				});
+				checkStacks();
 			}
 		});
 	}
 
-
-	function getSingleShow(id, index) {
-		// console.log('getSingleShow() called');
+	// for a show of $id, finds the SHOW model
+	//   and adds it to myShows
+	function fetchShow(id) {
+		console.log('fetchShow() called');
 
 		var showsObject = Parse.Object.extend("Show");
-		var showsQuery = new Parse.Query(showsObject);
-		// console.log(id);
+		var showsQuery  = new Parse.Query(showsObject);
 		showsQuery.equalTo("show_id", parseInt(id));
+		//async
 		showsQuery.find({
 			success: function(results) {
-				var result = _.first(results);
-				myShows.add(result);
-				// console.log('index' + index);
-				queue_render();
-				manage_render();
-		  		update_queued_total();
+				myShows.add( _.first(results) );
+				checkStacks();
 			}
 		});
+	}
+
+	// given global myBools and myShows STACKS,
+	//   updates the queued total
+	//   determines if the two STACKs are 
+	//     $isEqual   --> done syncing (equal)
+	//     $areShows  --> are there shows to MANAGE?
+	//     $areQueued --> are there eps in the QUEUE?
+	//   and triggers the tab states accordingly
+	//   and renders the states accordingly
+	function checkStacks(){
+		console.log('checking stacks');
+
+		var isEqual = (myBools.length == myShows.length);
+
+		stateDetermined('manage', 'thinking');
+		stateDetermined('queue', 'thinking');
+
+		update_queued_total();
+
+		//if not equal, not done async loading. otherwise...
+		if (!isEqual){ return; } 
+
+		var areShows = (myShows.length != 0);
+		var areQueued = (calculate_queued_total() > 0);
+		// console.log('isEqual : ' + isEqual + ', areShows : ' + areShows + ', areQueued : ' + areQueued);
+
+		if(areShows){
+			stateDetermined('manage', 'thinking');
+			stateDetermined('queue', 'thinking');
+
+			manage_render();
+
+			if(areQueued){
+				//manage is full, queue is full
+				console.log('manage is full, queue is full');
+				stateDetermined('manage', 'full');
+				stateDetermined('queue', 'full');
+
+				queue_render();
+			} else {
+				console.log('manage is full, queue is empty');
+				stateDetermined('manage', 'full');
+				stateDetermined('queue', 'empty');
+			}
+		} else {
+			//manage is empty, queue is empty
+			console.log('manage is empty, queue is empty');
+			stateDetermined('manage', 'empty');
+			stateDetermined('queue', 'empty');
+		}
+	}
+
+	//given a TAB and its STATE
+	//  hide and show all tab states accordingly
+	function stateDetermined(tab, state){
+		$('#'+tab+'_full').hide();
+		$('#'+tab+'_empty').hide();
+		$('#'+tab+'_thinking').hide();
+
+		$('#'+tab+'_'+state).show();
 	}
 
 
 // add section behavior
 
+	//cancel the ADD process --> return to $a
 	function add_cancel() {
 		console.log('add_cancel() called');
 
 		add_switch('a');
 		xhr.abort();
-		pushAlert("Query aborted.");
+		toast("Query aborted.");
 	}
 
+	//switch the .card-content to match $stage
 	function add_switch(stage) {
 		console.log('add_switch() called');
 
 		$('section#add .card-content').hide();
 		$('section#add .card-action a').hide();
 		$('section#add .card-content#add-content-'+stage).show();
+		
 		if(stage=='a') {
 			$('section#add .card-action a#add').show();
 			$('section#add input#input').val("");
@@ -610,37 +658,37 @@ $(function() {
 		}
 	}
 
-	//what's the name of the show?
-	function add_stage_a() {
-		console.log('add_stage_a() called');
+	//ask what the show is called
+	function add_ask() {
+		console.log('add_ask() called');
 
 		add_switch('a');
 		$("section#add input#input").keyup(function(event) {
 			if(event.keyCode == 13) { 
 				var title = $('section#add input#input').val();
-				add_stage_b(title);
+				add_bring(title);
 			}
 		});
 
 		$("section#add .card-action a#add").click(function(event) {
 			var title = $('section#add input#input').val();
-			add_stage_b(title);
+			add_bring(title);
 		});
 	}
 
-	//searching for shows titled
-	function add_stage_b(string) {
-		console.log('add_stage_b() called');
+	//bring the search results
+	function add_bring(string) {
+		console.log('add_bring() called');
 
 		add_switch('b');
 		// console.log(string);
 		$('section#add .card-content#add-content-b b').text(string);
 		var shortname = string.toLowerCase().replace(/\s/g, '-'); //NICE ONE PLANK
-		// $('section#add .card-content#add-content-b span').text(shortname);
-		// console.log(shortname);
+
+
 		//if the string is empty, it's not a mistake 
 		if (!shortname) {
-			pushAlert("Type the name of a show you\'d like to follow\ in the input box.");
+			toast("Type the name of a show you\'d like to follow\ in the input box.");
 			$('section#add input#input').focus();
 			add_switch('a');
 			return;
@@ -656,32 +704,29 @@ $(function() {
 				if (data == false) {
 					//cancel
 					add_switch('a');
-					pushAlert('Something\'s wrong with the database.');
+					toast('Something\'s wrong with the database.');
 				} else if (data[0]=="0") {
 					// no search results
 					add_switch('a');
-					pushAlert('No Search Results Found');
+					toast('No Search Results Found');
 				} else {
 					//next step
 					add_switch('c');
-					add_stage_c(string, data);
+					add_choose(string, data);
 					// console.log(data);
 					if(data.show.length) {
-						pushAlert(data.show.length + ' Results Found');
+						toast(data.show.length + ' Results Found');
 					} else {
-						pushAlert('1 Result Found');						
+						toast('1 Result Found');						
 					}
 				}
 			}
 		});
 	}
 
-	//which of these do you mean?
-	function add_stage_c(string, data) {
-		console.log('add_stage_c() called');
-
-
-		// console.log('is array? ' + _.isArray(data['show']));
+	//choose a show from the results
+	function add_choose(string, data) {
+		console.log('add_choose() called');
 
 		//if there's only one search result, wrap it in an array
 		if(!_.isArray(data['show'])) {
@@ -700,48 +745,48 @@ $(function() {
 
 		$("#add-content-c .collection a").click(function() {
 			var id = $(this).attr('id');
-			var show = _.findWhere(data.show, {showid: id});
-			add_stage_d(show);
+			var show_obj = _.findWhere(data.show, {showid: id});
+			add_determine(show_obj);
 		});
 	}
 
-	//where are you at?
-	function add_stage_d(show) {
-		console.log('add_stage_d() called');
+	//determine if you've seen it or not
+	function add_determine(show_obj) {
+		console.log('add_determine() called');
 
 		add_switch('d');
-		$('#add-content-d h5 b').text(show['name']);
+		$('#add-content-d h5 b').text(show_obj['name']);
 		// console.log(show);
 
 		$('div#add-content-d a#full').click(function() {
-			addShow(show, true);
-			add_stage_f(show);
+			tryShow(show_obj, true);
+			add_finding(show_obj);
 		});
 		$('div#add-content-d a#part').click(function() {
-			add_stage_e(show);
+			add_exactly(show_obj);
 		});
 		$('div#add-content-d a#empty').click(function() {
-			addShow(show, false);
-			add_stage_f(show);
+			tryShow(show_obj, false);
+			add_finding(show_obj);
 		});
 	}
 
-	//how far exactly?
-	function add_stage_e(show) {
-		console.log('add_stage_e() called');
+	//exactly how far thru the show?
+	function add_exactly(show_obj) {
+		console.log('add_exactly() called');
 	}
 
-	function add_stage_f(show) {
-		console.log('add_stage_f() called');
+	//finding episodes
+	function add_finding(show_obj) {
+		console.log('add_finding() called');
 
 		add_switch('f');
-		$('#add-content-f h5 b').text(show['name']);
+		$('#add-content-f h5 b').text(show_obj['name']);
 	}
 
-	function add_stage_g(name) {
-		console.log('add_stage_g() called');
-
-		queue_render();
+	//great, it worked
+	function add_great(name) {
+		console.log('add_great() called');
 		add_switch('g');
 		$('#add-content-g h5 b').text(name);
 		setTimeout(function() {
@@ -749,30 +794,22 @@ $(function() {
 		},3000)
 	}
 
-// empty section behavior
-
-	function empty_init() {
-		console.log('empty_init() called');
-
-		$('section#empty .card-action a#add').click(function() {
-			tab_goto('add');
-		});
-	}
-
 // queue stuff
 
+	//renders the queue
 	function queue_render() {
-		// console.log('queue_render() called');
+		console.log('queue_render() called');
 
+		//check that the rendering is valid
 		if (myBools.length != myShows.length) { return; }
+
   		update_queued_total();
-		// if (myBools.length == 0 || myShows.length == 0) {tab_goto('empty'); }
-		
+
 	  	var showTemplate 	= _.template( $('#queue-item-template').html() );
-	  	var episodeTemplate = _.template( $('#episode-template').html() );
+	  	var episode_template = _.template( $('#episode-template').html() );
 	  	var moreTemplate 	= _.template( $('#more-template').html() );
 
-		$("section#queue #queuecollection").empty(); //empty #queuecollection with each render
+		$("section#queue #queue_full").empty(); //empty #queue_full with each render
 	  	
 	  	//for every show in global myShows
 	  	_.each(myShows.models, function(thisShow, show_index){
@@ -788,9 +825,9 @@ $(function() {
 		        'showid'	: thisShow.get('show_id')
 		  	};
 
-			$("section#queue #queuecollection").append( showTemplate(showTemplateData) );
+			$("section#queue #queue_full").append( showTemplate(showTemplateData) );
 
-			var el = $("section#queue #queuecollection li#"+show_id);
+			var el = $("section#queue #queue_full li#"+show_id);
 
 			//these are all show-specific
 	  		var show = thisShow.get('episodes');
@@ -816,7 +853,7 @@ $(function() {
   						isOverflow = true;
   					}
   						  					
-  					var episodeTemplateData = {
+  					var episode_templateData = {
   						'show_id' 	: show_id,
 				        's' 		: season_index+1,
 				        'e' 		: pad(ep_index+1, 2),
@@ -830,8 +867,8 @@ $(function() {
   					};
 
   					//print it
-					$("section#queue #queuecollection li#"+show_id+" p").append( 
-						episodeTemplate(episodeTemplateData) 
+					$("section#queue #queue_full li#"+show_id+" p").append( 
+						episode_template(episode_templateData) 
 					);
 	  			});
 			});
@@ -855,20 +892,27 @@ $(function() {
 	  		
 	  		toggleSeen(showid, season, episode);
 	  		
-	  		$(this).toggleClass('lighten-3');
+	  		toggle_el($(this));
 
-	  		if($(this).children('i').html() == 'check_box') {
-		  		$(this).children('i').html('check_box_outline_blank');
-		  		update_queued_total();
-	  		} else {
-		  		$(this).children('i').html('check_box');
-		  		update_queued_total();
-	  		}
+	  		update_queued_total();
+
+	  		// $(this).toggleClass('lighten-3');
+
+	  		// if($(this).children('i').html() == 'check_box') {
+		  	// 	$(this).children('i').html('check_box_outline_blank');
+		  	// 	update_queued_total();
+	  		// } else {
+		  	// 	$(this).children('i').html('check_box');
+		  	// 	update_queued_total();
+	  		// }
+
+	  		manage_render();
+	  		// checkStacks();
 	  	});
 
 	  	//toggle .extra on a.more click
 		$("section#queue a.more").click(function() {
-			$('#queuecollection li#'+$(this).attr('id')+" p a.extra").toggle();
+			$('#queue_full li#'+$(this).attr('id')+" p a.extra").toggle();
 
 			$(this).children('i').toggleClass('left');
 			$(this).children('span.text').toggle();
@@ -885,20 +929,19 @@ $(function() {
 		});
 	}
 
-	//updates the total number of queued episodes as it appears anywhere needed
-	//i fear this is called too often
+	//updates the total num of qd eps, anywhere needed
 	function update_queued_total() {
 		console.log('update_queued_total() called');
+		
 		//currently only needed in the tab span#totalqueued
 		var qd = calculate_queued_total();
 		if (qd == 0){
 			qd = 'Nothing';
 		}
 		$("span#totalQueued").html(qd);
-
 	}
 
-	//returns the number of queued episodes in global myBools
+	//returns the num of queued episodes in global myBools
 	function calculate_queued_total() {
 		// console.log('calculate_queued_total() called');
 
@@ -913,7 +956,7 @@ $(function() {
 		return num;
 	};
 
-	//returns the number of queued episodes in an individual show from global myBools
+	//returns the num of qd eps in a show from global myBools
 	function calculate_queued_per_show(showid) {
 		// console.log('calculate_queued_per_show() called');
 
@@ -934,216 +977,206 @@ $(function() {
 
 // manage stuff
 
-	function manage_init() {
-		console.log('manage_init() called');
-
-		// console.log('initializing manage');
-		// console.log(myShows);
-		manage_render();	
-	}
-
+	//renders the MANAGE block
 	function manage_render() {
+		// console.log(myBools);
 		console.log('manage_render() called');
 
-
+		//check that rendering is valid
 		if (myBools.length != myShows.length) { return; }
-		if (myBools.length == 0 || myShows.length == 0) { return; }
 
+		//remind user of performance issues
 		if (myBools.length > 15) {
-			pushAlert('For best performance, remove shows that are off the air.', longTime);
+			toast('For best performance, remove shows that are off the air.', longTime);
 		}
-		// console.log('tests passed, rendering manage afresh');
 
-	  	var manage_template = _.template( $('#manage-item-template').html() );
-	  	var manage_details_template = _.template( $('#manage-details-template').html() );
-		$("section#manage #managecollection").empty();
-		for (var i = 0; i < myShows.length; i++) {
-			var thisShow = myShows.at(i);
-		  	var show_id = thisShow.get('show_id');
+		//define templates
+	  	var manage_template				= _.template( $('#manage-item-template').html() );
+	  	var manage_details_template		= _.template( $('#manage-details-template').html() );
+		var episode_template			= _.template( $('#episode-template').html() );
+
+		//empty #manage_full
+		$("section#manage #manage_full").empty();
+
+
+		//print all elements
+		_.each(myShows.models, function(thisShow, index){
+
+		  	var show_id 	= thisShow.get('show_id');
+	  		var episodes = thisShow.get('episodes');
 	  		var thisBool = _.find(myBools.models, function(item) { return item.get('show_id') === show_id; });
+	  		
 	  		var manage_data = {
-		        showname : thisShow.get('name'),
-		        unseen : 0,
-		        shade : 'green',
-		        showid : thisShow.get('show_id'),
-		        num_seasons : thisShow.get('episodes').length
+		        'showname'		: thisShow.get('name'),
+		        'unseen'		: 0,
+		        'shade'			: 'green',
+		        'showid'		: thisShow.get('show_id'),
+		        'num_seasons'	: thisShow.get('episodes').length
 		  	};
-		  	// console.log('appending showtemplate');
-			$("section#manage #managecollection").append( 
-				manage_template(manage_data) 
-			);
-			// console.log(myShows.at(i).get('episodes'));
+
+			$("section#manage #manage_full").append( manage_template(manage_data) );
+
 			var manage_details_data = {
-				name : thisShow.get('name'),
+				name 			: thisShow.get('name'),
 				classification	: thisShow.get('classification'),
-				country	: thisShow.get('country'),
-				started	: thisShow.get('started'),
-				ended	: thisShow.get('ended'),
-				status	: thisShow.get('status'),
-		        episodes : thisShow.get('episodes'),
-		        num_seasons : thisShow.get('episodes').length,
-		        showid : thisShow.get('show_id')
+				country			: thisShow.get('country'),
+				started			: thisShow.get('started'),
+				ended			: thisShow.get('ended'),
+				status			: thisShow.get('status'),
+		        episodes 		: thisShow.get('episodes'),
+		        num_seasons 	: thisShow.get('episodes').length,
+		        showid 			: thisShow.get('show_id')
 		  	};
-		  	// console.log('appending showtemplate');
-			$("section#manage #managecollection").append( 
-				manage_details_template(manage_details_data) 
-			);
-			//inject episodes
-			for(var j = 0; j < thisShow.get('episodes').length; j++) {
-				var seenThisSeason = 0;
-				var thisSeason = thisShow.get('episodes')[j];
-				for (var k = 0; k < thisSeason.length; k++) {
-	  				var seen = thisBool.get('array')[j][k];
-	  				if(seen) {seenThisSeason++;}
-					var thisEp = thisSeason[k];
-					// console.log(i+' '+j+' '+k);
-					// console.log(seen);
-					var color = seen?'green lighten-2':'green';
-					var icon = seen?'check_box':'check_box_outline_blank';
-					// console.log(icon);
-					var episodeTemplate = _.template( $('#episode-template').html() );
-  					var episodeTemplateData = {
-  						'showid' : show_id,
-  						'show_id' : show_id,
-				        's' : j+1,
-				        'e' : pad(k+1, 2),
-				        'j' : j,
-				        'k' : k,
-				        'title' : thisEp.title,
-				        'icon' : icon,
-				        'color' : color,
-				        'extra' : false,
-				        'hiding': false
+
+			$("section#manage #manage_full").append( manage_details_template(manage_details_data) );
+
+			_.each(episodes, function(thisSeason, season_index){
+				var el = $('section#manage #manage_full #'+show_id+'x'+season_index);
+
+				_.each(thisSeason, function(thisEp, ep_index){
+
+					var seen = thisBool.get('array')[season_index][ep_index];
+
+  					var episode_templateData = {
+  						'showid' 	: show_id,
+  						'show_id' 	: show_id,
+				        's' 		: season_index+1,
+				        'e' 		: pad(ep_index+1, 2),
+				        'j' 		: season_index,
+				        'k' 		: ep_index,
+				        'title' 	: thisEp.title,
+				        'icon' 		: seen ? 'check_box' : 'check_box_outline_blank',
+				        'color' 	: seen ? 'green lighten-2' : 'green',
+				        'extra' 	: false,
+				        'hiding'	: false
   					};
-					$('section#manage #managecollection #'+show_id+'x'+j).append( 
-						episodeTemplate(episodeTemplateData) 
-					);
-				}
-			}
-		}
 
-		//unbind behaviors
-		$("section#manage a.episode").unbind();
+					el.append( episode_template(episode_templateData) );
+				});
+			});
+		});
 
-		//toggle on click
-	  	$("section#manage a.episode").click(function() {
-	  		var showid = $(this).attr('data-show');
-	  		var season = $(this).attr('data-season');
-	  		var episode = $(this).attr('data-episode');
-	  		toggleSeen(showid, season, episode);
-	  		$(this).toggleClass('lighten-2');
-	  		if($(this).children('i').html()=='check_box') {
-		  		$(this).children('i').html('check_box_outline_blank');
-	  		} else {
-		  		$(this).children('i').html('check_box');
-	  		}
-	  		queue_render();
-			update_lenses(myBools);
-	  	});
-		
 		//initialize all tabs
-		$('ul.tabs').tabs();
+		$('ul.tabs').tabs(); 
+
+		//hide item details
 		$('.manage-item-details').hide();
 		
+		//toggle seen/queued on a.episode click
+	  	$("section#manage a.episode").click(function() {
+	  		var showid	= $(this).attr('data-show');
+	  		var season	= $(this).attr('data-season');
+	  		var episode	= $(this).attr('data-episode');
+	  		
+	  		toggleSeen(showid, season, episode);
+	  		
+	  		toggle_el($(this));
+	  		
+	  		queue_render();
+
+	  		update_queued_total();
+
+			update_lenses(myBools);
+	  	});
+
 		//expand click behaviors
-		var expanded = false;
+		var isExpanded = false;
+
+		//expand div on a#expand click	
 		$('section#manage a#expand').click(function() {
-			var showid = $(this).attr('data-id') 
-			// console.log(showid);
 			$(this).parent().parent().next().toggle();
-			if(expanded) { 
+			if(isExpanded) { 
 				$(this).children('i').html('expand_more');
-				expanded = false;
+				isExpanded = false;
 			} else {
 				$(this).children('i').html('expand_less');
-				expanded = true;				
+				isExpanded = true;				
 			}
 		});
 
-		$('section#manage a#delete').click(function() {
-			var showid = $(this).attr('data-id');
-			var name = $(this).attr('data-name');
-			manage_delete(showid,name);
+		//take action on a.click
+		$('section#manage .card-action a').click(function() {
+			var showid 	= $(this).attr('data-id');
+			var name 	= $(this).attr('data-name');
+			var action 	= $(this).attr('id');
+			if(action=='delete'){
+				manage_delete(showid, name);				
+			} else if (action=='reset'){
+				manage_set_all(showid, name, false);
+			} else if (action=='set'){
+				manage_set_all(showid, name, true);
+			}
+			//don't re-render - just toggleSeen for all eps in shw
+			//for each .episode
+
+			_.each($('.manage-item-details a.episode'), function(i){
+				toggle_el($(i));
+			});
+
+			update_lenses(myBools);
 		});
 
-		$('section#manage a#reset').click(function() {
-			var showid = $(this).attr('data-id');
-			var name = $(this).attr('data-name');
-			manage_reset(showid,name);
-		});
-
-		$('section#manage a#set').click(function() {
-			var showid = $(this).attr('data-id');
-			var name = $(this).attr('data-name');
-			manage_set(showid,name);
-		});
-
+		//update lenses at least once per render
 		update_lenses(myBools);
 	}
 
+	//toggles an episode's element block
+	function toggle_el(el){
+		el.toggleClass('lighten-3');
+	  		
+  		if( el.children('i').html()=='check_box' ) {
+	  		el.children('i').html('check_box_outline_blank');
+  		} else {
+	  		el.children('i').html('check_box');
+  		}
+	}
+
+	//deletes a show
 	function manage_delete(showid, name) {
 		console.log('manage_delete() called');
+		var len = myBools.length;
+		boolResult = _.first(myBools.filter(function(model) {
+  			return model.get('show_id') == showid;
+  		}));
+
+  		showResult = _.first(myShows.filter(function(model) {
+  			return model.get('show_id') == showid;
+  		}));
+
+		toast('Deleted ' + name); //let em know
+  		
+  		boolResult.destroy(); //destroy bool
+  		myShows.remove(showResult); //remove show
+
+		$('#manage_full li#'+showid).remove(); //destroy divs
+
+		checkStacks();			
+	}
+
+	//sets all seen / queued for a show
+	function manage_set_all(showid, name, allSeen) {
+		console.log('manage_set_all() called');
 
 		result = _.first(myBools.filter(function(model) {
   			return model.get('show_id') == showid;
   		}));
 
-		console.log(result);
-		pushAlert('Deleted ' + name);
-  		result.destroy();
-		$('#managecollection li#'+showid).remove();
-  		// console.log($('#managecollection li#'+showid));
-  		update_queued_total();
-	}
+  		var tempArray = result.get('array');
+  		_.each(tempArray, function(i_item, i_index){
+  			_.each(i_item, function(j_item, j_index){
+  				tempArray[i_index][j_index] = allSeen;
+  			});
+  		});
 
-	function manage_reset(showid, name) {
-		console.log('manage_reset() called');
+  		if(allSeen){
+			toast('Marked all episodes of ' + name + ' as seen.');
+  		} else {
+			toast('Queued all episodes of ' + name + '.');
+  		}
+		result.set('array', tempArray);
+		result.save();
 
-		// console.log(myBools);
-		for(var i = 0; i < myBools.length; i++) {
-			if(myBools.at(i).get('show_id') == showid) {
-				// console.log(myBools.at(i).get('array'));
-				var tempArray = myBools.at(i).get('array');
-				for(var j = 0; j < tempArray.length; j++) {
-					for(var k = 0; k < tempArray[j].length; k++) {
-						tempArray[j][k] = false;
-					}
-				}
-				myBools.at(i).set('array', tempArray);
-				myBools.at(i).save();
-				getMyBools();
-				queue_render();
-				update_queued_total();
-				pushAlert('Queued all episodes of ' + name + '.');
-			}
-		}
-	}
-
-	function manage_set(showid, name) {
-		console.log('manage_set() called');
-
-		for(var i = 0; i < myBools.length; i++) {
-			if(myBools.at(i).get('show_id') == showid) {
-
-				var tempArray = myBools.at(i).get('array');
-				for(var j = 0; j < tempArray.length; j++) {
-					for(var k = 0; k < tempArray[j].length; k++) {
-						tempArray[j][k] = true;
-					}
-				}
-
-				myBools.at(i).set('array', tempArray);
-				myBools.at(i).save();
-				
-				getMyBools();
-				
-				queue_render();
-				
-				update_queued_total();
-				
-				pushAlert('Marked all episodes of ' + name + ' as seen.');
-			}
-		}
+		update_queued_total();
 	}
 
 	// updates ALL the lenses in section#manage
@@ -1168,7 +1201,7 @@ $(function() {
 				if (_.every(thisSeason, _.identity)) { 
 					//completely seen season
 					el.html('radio_button_unchecked');
-					el.addClass('grey-text');
+					el.addClass('light-green-text');
 				} else if (_.some(thisSeason, _.identity)){ 
 					//partially seen season
 					el.html('timelapse');
@@ -1201,8 +1234,8 @@ $(function() {
 	}
 
 	//pushes an alert to the box in the corner
-	function pushAlert(str, num) {
-		console.log('pushAlert() called: ' + str);
+	function toast(str, num) {
+		// console.log('toast() called: ' + str);
 
 		if(!_.isUndefined(num)) {
 			Materialize.toast(str, num);

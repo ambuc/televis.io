@@ -113,6 +113,7 @@
         </nav>
       </div>
 
+<!--  -- -- TABSBLOCK -- -- -->
       <div class='container'>
         <div class="col l12 m12 s12 tabsblock" style="display: block;">
           <ul class="navtabs center-align row"> 
@@ -145,6 +146,8 @@
     <main>
       <div class='container'>
       
+<!--    -- -- ONBOARDING -- -- -->
+
         <section id='onboarding'>
           <div class='card white lighten-2'>
             
@@ -193,15 +196,16 @@
             </div>
           </div>
         </section>
+
+<!--    -- -- EMPTY -- -- -->
         
-        <section id='empty' class='col l10 m12 s12'>
+<!--         <section id='empty' class='col l10 m12 s12'>
           <div class='card white lighten-2'>
             <div class="card-content"> 
               <h5>There's nothing in your queue.</h5> 
-              <p class='flow-text'>You've watched <i>so</i> much television. But there's always more!</p> 
             </div> 
             <div class="card-action"> 
-              <a class="waves-effect btn cyan white-text" id='add'>
+              <a class="waves-effect btn-large green white-text" id='add'>
                 <i class='material-icons left'>edit</i>
                 Add some shows
               </a> 
@@ -209,26 +213,61 @@
           </div>
         </section>
 
+        <section id='empty_manage' class='col l10 m12 s12'>
+          <div class='card white lighten-2'>
+            <div class="card-content"> 
+              <h5>You aren't following any shows.</h5> 
+            </div> 
+            <div class="card-action"> 
+              <a class="waves-effect btn-large green white-text" id='add'>
+                <i class='material-icons left'>edit</i>
+                Add some shows
+              </a> 
+            </div> 
+          </div>
+        </section> -->
+
 <!--    -- -- QUEUE -- -- -->
 
         <section id="queue" class="queue col l10 m12 s12">
           <div class='row'>
             <div class='col s12'>
-              <ul class="collection" id='queuecollection'>
-                <div class='center-align'>
-                  <div class="preloader-wrapper big active" style='margin: 30px;'>
-                    <div class="spinner-layer spinner-blue-only">
-                      <div class="circle-clipper left">
-                        <div class="circle"></div>
-                      </div><div class="gap-patch">
-                        <div class="circle"></div>
-                      </div><div class="circle-clipper right">
-                        <div class="circle"></div>
-                      </div>
+              <ul class="collection" id='queue_full'>
+              </ul>
+
+              <div class='center-align' id='queue_thinking'>
+                <div class="preloader-wrapper big active" style='margin: 30px;'>
+                  <div class="spinner-layer spinner-blue-only">
+                    <div class="circle-clipper left">
+                      <div class="circle"></div>
+                    </div>
+                    <div class="gap-patch">
+                      <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                      <div class="circle"></div>
                     </div>
                   </div>
                 </div>
-              </ul>
+              </div>
+
+              <div class='center-align' id='queue_empty'>
+                <div class="card white">
+                  <div class="card-content">
+                    <p class='flow-text'>
+                      <h5>You don't have any episodes in your queue.</h5>
+                      Either you aren't following any shows, or you've already watched your whole queue.
+                    </p>
+                  </div>
+                  <div class="card-action">
+                    <a class='btn green white-text' id='follow'>
+                      <i class='material-icons left'>add</i>
+                      Go follow some shows
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
             </div>
           </div>
         </section>  
@@ -266,8 +305,6 @@
           </a>
         </script>
 
-
-
 <!--    -- -- EDITOR -- -- -->
 
         <section id="add" class="col l12 m12 s12">
@@ -277,10 +314,11 @@
               <div class="card white lighten-3" onclick="$('#AddShowTitle').focus();">                
 
                 <div class="card-content" id='add-content-a'>
-                  <h5> What's the name of the show you're watching? </h5>
+                  <h5> What's a show you watch? </h5>
                   <div class="input-field lighten-5">
-                    <i class="material-icons prefix">search</i>
+                    <!-- <i class="material-icons prefix">search</i> -->
                     <input id="input" type="text" class="validate"/>
+                    <!-- <label for="name">Show Title</label> -->
                   </div>
                 </div>
 
@@ -295,20 +333,6 @@
                   <h5> Which of these do you mean?</h5>
                   <span></span>
                 </div>
-
-                <script type="text/template" id="search-results-template">
-                  <ul class="collection">
-                  <% _.each(results, function(result) { %>
-                    <a class="collection-item avatar black-text" id=<%=result['showid']%> >
-                      <i class="material-icons circle green">tv</i>
-                      <span class="title"><%=result['name']%></span>
-                      <p><%=result['seasons']%> season(s) (<%=result['started']%>) <br>
-                         <%=result['status']%>
-                      </p>
-                    </a>
-                  <% }); %>
-                  </ul>
-                </script>
 
                 <div class="card-content" id='add-content-d'>
                   <h5>Where are you at in <b></b>?</h5>
@@ -382,8 +406,8 @@
 
                 <div class='card-action'>
                   <a class='waves-effect btn-large green white-text' id='add'>
-                    <i class="material-icons left">create</i>
-                    <span id='AddShowButtonText'>Add Show</span>
+                    <i class="material-icons left">search</i>
+                    <span id='AddShowButtonText'>Search</span>
                   </a>
                   <a class='waves-effect btn-large red white-text' id='cancel'>
                     <i class="material-icons left">cancel</i>
@@ -396,31 +420,62 @@
           </div> <!-- row -->
         </section> <!-- add -->
 
-<!--    -- -- manage -- -- -->
+        <script type="text/template" id="search-results-template">
+          <ul class="collection">
+          <% _.each(results, function(result) { %>
+            <a class="collection-item avatar black-text" id=<%=result['showid']%> >
+              <i class="material-icons circle green">tv</i>
+              <span class="title"><%=result['name']%></span>
+              <p><%=result['seasons']%> season(s) (<%=result['started']%>) <br>
+                 <%=result['status']%>
+              </p>
+            </a>
+          <% }); %>
+          </ul>
+        </script>
+
+<!--    -- -- MANAGE -- -- -->
 
         <section id="manage" class="col l10 m12 s12">
           <div class='row'>
             <div class='col s12 m12 l12'>
 
-              <ul class="collection" id='managecollection'>
-                <div class='center-align'>
-                  <div class="preloader-wrapper big active" style='margin: 30px;'>
-                    <div class="spinner-layer spinner-blue-only">
-                      <div class="circle-clipper left">
-                        <div class="circle"></div>
-                      </div><div class="gap-patch">
-                        <div class="circle"></div>
-                      </div><div class="circle-clipper right">
-                        <div class="circle"></div>
-                      </div>
+              <ul class="collection" id='manage_full'>
+              </ul>
+              
+              <div class='center-align' id='manage_thinking'>
+                <div class="preloader-wrapper big active" style='margin: 30px;'>
+                  <div class="spinner-layer spinner-blue-only">
+                    <div class="circle-clipper left">
+                      <div class="circle"></div>
+                    </div><div class="gap-patch">
+                      <div class="circle"></div>
+                    </div><div class="circle-clipper right">
+                      <div class="circle"></div>
                     </div>
                   </div>
                 </div>
-              </ul>
+              </div>
 
+              <div class='center-align' id='manage_empty'>
+                <div class="card white">
+                  <div class="card-content">
+                    <p class='flow-text'>
+                      <h5>You're not following any shows yet.</h5>
+                      Televis.io helps you keep up with the TV shows you watch. Add some shows and mark off the episodes you've already seen, and we'll keep track of the rest.
+                    </p>
+                  </div>
+                  <div class="card-action">
+                    <a class='btn green white-text' id='follow'>
+                      <i class='material-icons left'>add</i>
+                      Go follow some shows
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
             </div>
           </div>
-
         </section>
 
         <script type="text/template" id="manage-item-template">
@@ -473,17 +528,17 @@
                     <span class="card-title black-text"><%=name%> <small><%=status%></small></span>
                   </div>
                   <div class="card-action">
-                    <a class="btn red lighten-1 white-text" id='delete' data-id=<%=showid%> data-name="<%=name%>">
-                      <i class="material-icons left">delete</i>
+                    <a class="btn red lighten-1 white-text right" id='delete' data-id=<%=showid%> data-name="<%=name%>">
+                      <i class="material-icons left hide-on-small-only">delete</i>
                       Remove Show
                     </a>
-                    <a class="btn light-blue lighten-1 white-text" id='reset' data-id=<%=showid%> data-name="<%=name%>">
-                      <i class="material-icons left">sync</i>
-                      Reset Progress
+                    <a class="btn green white-text" id='reset' data-id=<%=showid%> data-name="<%=name%>">
+                      <i class="material-icons left hide-on-small-only">check_box_outline_blank</i>
+                      Queue All
                     </a>
-                    <a class="btn light-green lighten-1 white-text" id='set' data-id=<%=showid%> data-name="<%=name%>">
-                      <i class="material-icons left">markunread_mailbox</i>
-                      Mark All As Seen
+                    <a class="btn green lighten-3 white-text" id='set' data-id=<%=showid%> data-name="<%=name%>">
+                      <i class="material-icons left hide-on-small-only">check_box</i>
+                      Check All
                     </a>
                   </div>
                 </div>                
