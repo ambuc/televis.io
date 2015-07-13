@@ -1,7 +1,8 @@
 //TODO
-// 2 partial caught up feature
-// 3 calendar
-// 4 ability 2 load new data + expand myBools arrays THE BIG ONE
+// 1 partial refresh of render / manage tabs, if i want
+// 2 specific episode add feature
+// 3 ability 2 load new data + expand myBools arrays THE BIG ONE
+// 4 calendar ?!
 
 $(function() {
 	
@@ -982,7 +983,7 @@ $(function() {
 		return num;
 	}
 
-	//generalized function
+	//generalized recursive function
 	// if $showid exists, calculate just for that
 	//	else, calculate all qd
 	function calculate_queued(showid, season) {
@@ -992,18 +993,7 @@ $(function() {
 		if(_.isUndefined(showid)) {
 			//calculate for all
 			_.each(myBools.models, function(boolModel) {
-				eps = _.first(_.filter(myShows.models, function(showModel) {
-					return (showModel.get('show_id') == boolModel.get('show_id'));
-				})).get('episodes');
-				_.each(boolModel.get('array'), function(s, i) {
-					_.each(s, function(e, j) {
-						var hasAired = hasItAired(
-							eps[i][j].airdate
-						);
-						var unseen = !e;
-						if(unseen && hasAired) {num++;}
-					});
-				});
+				num += calculate_queued(boolModel.get('show_id'));
 			});
 		} else {
 			//calculate just for one
@@ -1011,30 +1001,19 @@ $(function() {
 				return (i.get('show_id') == showid);
 			})).get('array');
 
-			var eps = _.first(_.filter(myShows.models, function(showModel) {
-					return (showModel.get('show_id') == showid);
-			})).get('episodes');
-
 			if(_.isUndefined(season)){
-				_.each(array, function(s, i) {
-					_.each(s, function(e, j) {
-						var hasAired = hasItAired(
-							eps[i][j].airdate
-						);
-						var unseen = !e;
-						if(unseen && hasAired) {num++};
-					});
-				});	
+				for(var i in _.range(array.length)){
+					num += calculate_queued(showid, i);
+				}
 			} else {
+				var eps = _.first(_.filter(myShows.models, function(showModel) {
+					return (showModel.get('show_id') == showid);
+				})).get('episodes');
+
 				_.each(array[season], function(e, j) {
-					var hasAired = hasItAired(
-						eps[season][j].airdate
-					);
-					var unseen = !e;
-					if(unseen && hasAired) {num++};
+					if( !e && hasItAired( eps[season][j].airdate ) ) {num++};
 				});
-			}
-			
+			}			
 		}
 		return num;
 	}
@@ -1145,7 +1124,7 @@ $(function() {
 
 	  		update_queued();
 
-			lenses_render(myBools);
+			lenses_render(showid, season);
 	  	});
 
 		//expand click behaviors
@@ -1182,11 +1161,11 @@ $(function() {
 				toggleEl($(i));
 			});
 
-			lenses_render(myBools);
+			lenses_render(showid);
 		});
 
 		//update lenses at least once per render
-		lenses_render(myBools);
+		lenses_render();
 	}
 
 	//toggles an episode's element block
@@ -1248,27 +1227,41 @@ $(function() {
 		update_queued();
 	}
 
-	// updates ALL the lenses in section#manage
-	// TODO rewrite faster: update just a particular show's lenses 
-	function lenses_render() {
-		console.log('lenses_render() called');
+	// generalized lens rendering function
+	// if showid is undefined, runs lenses_render(showid) on ALL models 
+	function lenses_render(showid, season) {
+		// console.log('lenses_render('+showid+') called');
 
-		myBools.each(function(model, index) {
+		if (_.isUndefined(showid)) {
+			_.each(myBools.models, function(model){
+				lenses_render(model.get('show_id'));
+			});
+		} else if (_.isUndefined(season)) {
+			console.log(showid);
+			var array = _.first(_.filter(myBools.models, function(model) {
+				return (model.get('show_id') == showid);
+			})).get('array');
+			for(var i in _.range(array.length)){
+				lenses_render(showid, i);
+			}
+		} else {
+			console.log(showid + ' ' + season);
+			var array = _.first(_.filter(myBools.models, function(model) {
+				return (model.get('show_id') == showid);
+			})).get('array');
 
-			var thisBool = model.get('array');
-			var show_id  = model.get('show_id');
-
-			_.each(thisBool, function(thisSeason, j){
-				//of the form #12345x0dot, where 12345 is the show_id and 0 is the season index
-				var el = $( '#' + show_id + 'x' + j + 'dot'); 
+			for(var i in _.range(array[season].length)){
+				
+				//of the form #12345x0dot, where 12345 is the showid and 0 is the season index
+				var el = $( '#' + showid + 'x' + i + 'dot');
 
 				el.attr('class', 'material-icons'); //removes all classes except one
 
-				if (calculate_queued(show_id, j) == 0) { 
+				if (calculate_queued(showid, i) == 0) { 
 					//completely seen season
 					el.html('radio_button_unchecked');
 					el.addClass('light-green-text');
-				} else if (calculate_queued(show_id, j) == calculate_viable(show_id, j)) { 
+				} else if (calculate_queued(showid, i) == calculate_viable(showid, i)) { 
 					//completely unseen season
 					el.html('lens');
 					el.addClass('green-text');
@@ -1277,10 +1270,9 @@ $(function() {
 					el.html('timelapse');
 					el.addClass('light-green-text');					
 				}
-			});
-
-
-		});
+			}
+		
+		}
 	}
 
 //general utility functions
