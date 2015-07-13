@@ -7,7 +7,11 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   
     <link rel="stylesheet" href="css/index.css">         
-    
+    <link rel="apple-touch-startup-image" href="/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   </head>
@@ -122,8 +126,8 @@
             </li>
             <li class="col s4">
               <a id="queue" class="waves-effect blue darken-2 white-text btn-large">
-                <i class="material-icons left hide-on-small-only">format_list_bulleted</i>
-                <span id='totalQueued'></span> <span class='hide-on-small-only'>Queued</span>
+                <i class="material-icons left hide-on-small-only">new_releases</i>
+                <span id='totalQueued'></span> <span class='hide-on-med-and-down'>in queue </span>
               </a>
             </li>
             <li class="col s4">
@@ -146,17 +150,17 @@
           <div class='card white lighten-2'>
             
             <div class='card-content' id='about'>
-              <p class='flow-text'><b>televis.io</b> lets you follow television in real time, tracking what you've seen, what you haven't, and what's coming up.</p>
+              <p class='flow-text'><b>televis.io</b> helps you follow live TV, keeping track of what you've seen, what you've missed, and what's coming up.</p>
             </div>
             <div class='card-content' id='entry'>
               <h5></h5>
               <div class='row'>
-                  <div class="input-field col s6">
+                  <div class="input-field col m6 s12">
                     <i class="material-icons prefix">account_circle</i>
                     <input id="username" type="text" class="validate">
                     <label for="username">Username</label>
                   </div>
-                  <div class="input-field col s6">
+                  <div class="input-field col m6 s12">
                     <i class="material-icons prefix">vpn_key</i>
                     <input id="password" type="password" class="validate">
                     <label for="password">Password</label>
@@ -167,22 +171,24 @@
 
             <div class="card-action"> 
                 <a class="waves-effect btn-large   red white-text" id='cancel'>
-                  <i class='material-icons left'>backspace</i>
-                  Cancel
+                  <i class='material-icons left hide-on-small-only'>backspace</i>
+                  <i class='material-icons hide-on-med-and-up'>backspace</i>
+                  <span class=' hide-on-small-only'>Cancel</span>
                 </a>
 
                 <a class="waves-effect btn-large right blue white-text" id='signup'>
-                  <i class='material-icons left'>power_settings_new</i>
+                  <i class='material-icons left hide-on-small-only'>power_settings_new</i>
                   Sign Up
                 </a> 
 
               <a class="waves-effect btn-large light-green white-text" id='login'>
-                <i class='material-icons left'>vpn_key</i>
+                <i class='material-icons left  hide-on-small-only'>vpn_key</i>
                 Log In
               </a>
               <a class="waves-effect btn-large green white-text right" id='go'>
-                <i class='material-icons left'>forward</i>
-                go
+                <i class='material-icons left hide-on-small-only'>forward</i>
+                <i class='material-icons hide-on-med-and-up'>forward</i>
+                <span class=' hide-on-small-only'>go</span>
               </a>
               
             </div>
@@ -235,8 +241,8 @@
               <a class='btn-flat white'>
                 <%=showname%>
               </a>
-              <a class=' secondary-content btn-flat white grey-text'>
-                <span id='unseen<%=showid%>'></span> queued
+              <a class='secondary-content btn-flat white grey-text hide-on-med-and-down'>
+                <%=unseen%> queued
               </a>
             </span>
             <p>
@@ -245,10 +251,19 @@
         </script>
 
         <script type="text/template" id="episode-template">
-          <a class='episode btn <%=color%> white-text truncate <%=extra?'extra':''%>' style='display:<%=hiding%>;' data_show=<%=show_id%> data_season=<%=j%> data_episode=<%=k%> >
+          <a class='episode btn <%=color%> white-text truncate <%=extra?'extra':''%>' style='display:<%=hiding%>;' data-show=<%=show_id%> data-season=<%=j%> data-episode=<%=k%> >
             <i class="material-icons left"><%=icon%></i>
-            <%=s%>x<%=e%> 
-            <%=title%> 
+            <span class=''><%=s%>x<%=e%> </span>
+            <span class=''><%=title%> </span>
+          </a>
+        </script>
+
+        <script type="text/template" id="more-template">
+          <a class='btn grey more' id="<%=showid%>" data-toggled='false'>
+            <i class='material-icons left'>expand_more</i>
+            <span class='text'>
+              <%=more%> more
+            </span>
           </a>
         </script>
 
@@ -264,7 +279,8 @@
 
                 <div class="card-content" id='add-content-a'>
                   <h5> What's the name of the show you're watching? </h5>
-                  <div class="input-field grey lighten-5">
+                  <div class="input-field lighten-5">
+                    <i class="material-icons prefix">search</i>
                     <input id="input" type="text" class="validate"/>
                   </div>
                 </div>
@@ -298,20 +314,7 @@
                 <div class="card-content" id='add-content-d'>
                   <h5>Where are you at in <b></b>?</h5>
                   <div class='row'>
-                    <div class='col s12 m4 l4'>
-                      <a class="waves-effect waves-light btn-large grey" 
-                        style='width:100%;' id='full'>
-                        <i class="material-icons left">panorama_fish_eye</i>
-                        <span class='hide-on-med-only'>All </span>Caught Up
-                      </a>
-                    </div>
-                    <div class='col s12 m4 l4'>
-                      <a class="waves-effect waves-light btn-large green lighten-1" 
-                        style='width:100%;' id='part'>
-                        <i class="material-icons left">timelapse</i>
-                        Partway Through
-                      </a>
-                    </div>
+                    
                     <div class='col s12 m4 l4'>
                       <a class="waves-effect waves-light btn-large green darken-1" 
                         style='width:100%;' id='empty'>
@@ -319,6 +322,23 @@
                         <span class='hide-on-med-only'>Just </span>Starting
                       </a>
                     </div>
+
+                    <div class='col s12 m4 l4'>
+                      <a class="waves-effect waves-light btn-large green lighten-1" 
+                        style='width:100%;' id='part'>
+                        <i class="material-icons left">timelapse</i>
+                        Partway Through
+                      </a>
+                    </div>
+                    
+                    <div class='col s12 m4 l4'>
+                      <a class="waves-effect waves-light btn-large grey" 
+                        style='width:100%;' id='full'>
+                        <i class="material-icons left">panorama_fish_eye</i>
+                        <span class='hide-on-med-only'>All </span>Caught Up
+                      </a>
+                    </div>
+
                   </div>
                   
                 </div>
@@ -411,13 +431,13 @@
               <%=showname%>
             </div>
 
-            <p>
+            <p class='lenses'>
             <% for (var i = 0; i < num_seasons; i++){%>
               <i class="material-icons" id = <%= showid+'x'+String(i)+'dot' %> ></i>
             <%}%>
             </p>
             <span class='secondary-content'>
-              <a class="btn blue" id='expand' data_id=<%=showid%>>
+              <a class="btn blue" id='expand' data-id=<%=showid%>>
                 <i class="material-icons">expand_more</i>
               </a>
             </span>
@@ -454,15 +474,15 @@
                     <span class="card-title black-text"><%=name%> <small><%=status%></small></span>
                   </div>
                   <div class="card-action">
-                    <a class="btn red lighten-1 white-text" id='delete' data_id=<%=showid%> data_name="<%=name%>">
+                    <a class="btn red lighten-1 white-text" id='delete' data-id=<%=showid%> data-name="<%=name%>">
                       <i class="material-icons left">delete</i>
-                      Delete Show
+                      Remove Show
                     </a>
-                    <a class="btn light-blue lighten-1 white-text" id='reset' data_id=<%=showid%> data_name="<%=name%>">
+                    <a class="btn light-blue lighten-1 white-text" id='reset' data-id=<%=showid%> data-name="<%=name%>">
                       <i class="material-icons left">sync</i>
                       Reset Progress
                     </a>
-                    <a class="btn light-green lighten-1 white-text" id='set' data_id=<%=showid%> data_name="<%=name%>">
+                    <a class="btn light-green lighten-1 white-text" id='set' data-id=<%=showid%> data-name="<%=name%>">
                       <i class="material-icons left">markunread_mailbox</i>
                       Mark All As Seen
                     </a>
