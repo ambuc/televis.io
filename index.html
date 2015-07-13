@@ -280,7 +280,7 @@
                 <%=showname%>
               </a>
               <a class='secondary-content btn-flat white grey-text hide-on-med-and-down'>
-                <%=unseen%> queued
+                <span class='unseen'><%=unseen%></span> queued
               </a>
             </span>
             <p>
@@ -289,7 +289,7 @@
         </script>
 
         <script type="text/template" id="episode-template">
-          <a class='episode btn <%=color%> white-text truncate <%=extra?'extra':''%>' style='display:<%=hiding%>;' data-show=<%=show_id%> data-season=<%=j%> data-episode=<%=k%> >
+          <a class='episode btn <%=color%> white-text truncate <%=extra?'extra':''%>' style='display:<%=hiding%>;' data-show=<%=show_id%> data-season=<%=j%> data-episode=<%=k%> data-disabled=<%=disabled%>>
             <i class="material-icons left"><%=icon%></i>
             <span class=''><%=s%>x<%=e%> </span>
             <span class=''><%=title%> </span>
@@ -577,7 +577,8 @@
   <!-- // <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.0/js/materialize.min.js"></script> -->
   <script src="lib/materialize.min.js"></script>
 
-  <script src="lib/date.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.min.js"></script>
+  <!-- // <script src="lib/date.min.js"></script> -->
 
   <script src="lib/jquery.xdomainajax.js"></script>
 
