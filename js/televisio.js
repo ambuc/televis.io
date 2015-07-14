@@ -1,8 +1,10 @@
 //TODO
-// 1 partial refresh of render / manage tabs, if i want
-// 2 specific episode add feature
-// 3 ability 2 load new data + expand myBools arrays THE BIG ONE
-// 4 calendar ?!
+
+//TODO: FETCH EPS OCCURS WHEN ADDING SHOW ALREADY ADDED
+//TODO: partial queue–render(showid), etc 
+//TODO: specific episode ADD
+//TODO: FETCH NEW EPS + EXPAND MYBOOLS
+//TODO: CALENDAR
 
 $(function() {
 	
@@ -21,7 +23,6 @@ $(function() {
 		}, 
 		initialize: function() {
 			//on initialization, create an array [[],[],[]] of length $seasons
-			// console.log(Parse.User.current());
 			this.set({
 				array: createArray(this.get('seasons'),0)
 			});
@@ -57,7 +58,8 @@ $(function() {
 	var ShowStack = Parse.Collection.extend({
 		model: Show,
 		comparator: function(model) {
-			return model.get('name');
+			// return model.get('name');
+			return -calculate_queued(model.get('show_id'));
 		},
 		initialize : function() {
 			console.log('ShowStack initialized');
@@ -68,7 +70,7 @@ $(function() {
 
 	var xhr; 					// one xhr request at a time, frien
 	var currentTab = ''; 		// which tab we're on
-	var defaultTab = 'manage';  // which tab to open on
+	var defaultTab = 'queue';  // which tab to open on
 	var queueLimit = 3; 		// num of eps per show in q item
 	var _MS_PER_DAY = 1000 * 60 * 60 * 24; //stuff for date handling, from SE
 	// var today = Date.today();
@@ -76,6 +78,16 @@ $(function() {
 	var shortTime 	= 3000;	//for toasts
 	var myBools = new BoolStack;
 	var myShows = new ShowStack;
+	var tabStates = {
+		'queue'  : 'thinking',
+		'manage' : 'thinking'
+	}
+	var tabColors = {
+		'default' : 'white',
+		'add' : '#4dd0e1',
+		'queue' : '#00bcd4',
+		'manage' : '#0097a7',
+	}
 
 //things to do only once, on startup
 
@@ -102,7 +114,7 @@ $(function() {
 		// console.log(isLoggedIn());
 
 		if(isLoggedIn()) {
-			toast('Hi, ' + capitalize(Parse.User.current().attributes.username) + '!');
+			toast('Hi, ' + Parse.User.current().attributes.username + '!');
 			displayTabs(true);	bindTabs(true);
 			displayWings(true);	bindWings(true);
 			bindEmpties(true);
@@ -119,11 +131,12 @@ $(function() {
 	function tryLogout() {
 		console.log('tryLogout() called');
 		if(isLoggedIn()) {
-			toast('Bye, ' + capitalize(Parse.User.current().get('username')) + '!');
+			toast('Bye, ' + Parse.User.current().get('username') + '!');
 			Parse.User.logOut();
 
 			displayTabs(false);		bindTabs(false);
 			displayWings(false); 	bindWings(false);
+			bg_recolor('default');
 
 			$('#totalQueued').empty();
 
@@ -140,7 +153,7 @@ $(function() {
 		if(bool) {
 	        $('#logio').show();
 	        $('#whoami').show();
-		    $('#whoami span').html(capitalize(Parse.User.current().get('username')));
+		    $('#whoami span').html(Parse.User.current().get('username'));
 		} else {
 			$('#logio').hide();
 		    $('#whoami').hide();
@@ -196,6 +209,7 @@ $(function() {
 			$('main section').hide();
 			$('section#'+desiredTab).show();
 			tab_recolor(desiredTab);
+			bg_recolor(desiredTab);
 			tab_init(desiredTab);
 			currentTab = desiredTab;
 			checkStacks();
@@ -207,6 +221,10 @@ $(function() {
 		$('.navtabs a').removeClass('btn-large darken-2');
 		$('.navtabs a').addClass('btn lighten-1');
 		$('.navtabs a#'+desiredTab).toggleClass('btn btn-large darken-2 lighten-1');
+	}
+
+	function bg_recolor(desiredTab){
+		$('main').css("background-color", tabColors[desiredTab]);
 	}
 
 	//only necessary for tabs with more than one stage - not queue or manage
@@ -407,10 +425,11 @@ $(function() {
 		});
 	}
 
-	//given a $showModel and a status $seen,
-	//	fetch its episodes,
-	//	process them,
-	// 	and .save() them to the $showModel.
+	//only called when CREATING a show
+	//  given a $showModel and a status $seen,
+	//	  fetch its episodes,
+	//	  process them,
+	// 	  and .save() them to the $showModel.
 	//	then create a BOOLS of the show.
 	function fetchEps(showModel, seen) {
 		console.log('fetchEps() called');
@@ -434,7 +453,6 @@ $(function() {
 	//given a $showModel and a status $seen,
 	//	create a user-specifc BOOLS model and .save() it. 
 	function tryBools(showModel, seen) {
-		console.log('tryBools() called');
 
 		var query = new Parse.Query(Parse.Object.extend("Bools"));
 		//two constraints -- $show_id and $user -- UNSCALEABLE, I think
@@ -536,8 +554,7 @@ $(function() {
 
 		console.log('fetchBools() called');
 
-		var boolsObject = Parse.Object.extend("Bools");
-		var boolsQuery  = new Parse.Query(boolsObject);
+		var boolsQuery  = new Parse.Query( Parse.Object.extend("Bools") );
 		boolsQuery.equalTo("user", Parse.User.current());
 		//async
 		boolsQuery.find({
@@ -545,7 +562,7 @@ $(function() {
 				myBools.reset();
 				myShows.reset();
 				_.each(results, function(result) {
-					myBools.add(result);
+					myBools.add( result );
 					fetchShow( result.get('show_id') );
 				});
 				checkStacks();
@@ -558,8 +575,7 @@ $(function() {
 	function fetchShow(id) {
 		console.log('fetchShow() called');
 
-		var showsObject = Parse.Object.extend("Show");
-		var showsQuery  = new Parse.Query(showsObject);
+		var showsQuery  = new Parse.Query( Parse.Object.extend("Show") );
 		showsQuery.equalTo("show_id", parseInt(id));
 		//async
 		showsQuery.find({
@@ -579,17 +595,19 @@ $(function() {
 	//   and triggers the tab states accordingly
 	//   and renders the states accordingly
 	function checkStacks() {
-		console.log('checking stacks');
+		// console.log('checking stacks');
 
 		var isEqual = (myBools.length == myShows.length);
-
-		fixState('manage', 'thinking');
-		fixState('queue', 'thinking');
 
 		update_queued();
 
 		//if not equal, not done async loading. otherwise...
-		if (!isEqual) { return; } 
+		if (!isEqual) { 
+			fixState('manage', 'thinking');
+			fixState('queue',  'thinking');
+			return; 
+		} 
+
 
 		var areShows = (myShows.length != 0);
 		var areQueued = (calculate_queued() > 0);
@@ -597,7 +615,7 @@ $(function() {
 
 		if(areShows) {
 			fixState('manage', 'thinking');
-			fixState('queue', 'thinking');
+			fixState('queue',  'thinking');
 
 			manage_render();
 
@@ -605,30 +623,37 @@ $(function() {
 				//manage is full, queue is full
 				console.log('manage is full, queue is full');
 				fixState('manage', 'full');
-				fixState('queue', 'full');
+				fixState('queue',  'full');
 
 				queue_render();
 			} else {
 				console.log('manage is full, queue is empty');
 				fixState('manage', 'full');
-				fixState('queue', 'empty');
+				fixState('queue',  'empty');
 			}
 		} else {
 			//manage is empty, queue is empty
 			console.log('manage is empty, queue is empty');
 			fixState('manage', 'empty');
-			fixState('queue', 'empty');
+			fixState('queue',  'empty');
 		}
 	}
 
 	//given a TAB and its STATE
 	//  hide and show all tab states accordingly
 	function fixState(tab, state) {
+		//if already in that state, save the jQuery expense
+		if(tabStates[tab]==state){return;}
+	
+		console.log('tab ' + tab + ' state ' + state);
+		//hide all other tab states
 		$('#'+tab+'_full').hide();
 		$('#'+tab+'_empty').hide();
 		$('#'+tab+'_thinking').hide();
-
+		//and show the relevant one
 		$('#'+tab+'_'+state).show();
+		//and update the global
+		tabStates[tab] = state;
 	}
 
 
@@ -644,6 +669,8 @@ $(function() {
 	}
 
 	//switch the .card-content to match $stage
+	//essentially the same as fixState('add', 'stage') 
+	//  but, yknow, whatever
 	function add_switch(stage) {
 		console.log('add_switch() called');
 
@@ -882,7 +909,8 @@ $(function() {
 				        'color' 	: pickColor(seen, ep.airdate),
 				        'extra' 	: isOverflow,
 				        'hiding'	: isOverflow ? 'none' : 'inline-block',
-				        'disabled'  : false
+				        'disabled'  : false,
+				        'classDisabled' : ''
   					};
 
   					//print it
@@ -1051,9 +1079,9 @@ $(function() {
 	  		
 	  		var manage_data = {
 		        'showname'		: thisShow.get('name'),
-		        'unseen'		: 0,
+		        'unseen'		: calculate_queued(show_id),
 		        'shade'			: 'green',
-		        'showid'		: thisShow.get('show_id'),
+		        'showid'		: show_id,
 		        'num_seasons'	: thisShow.get('episodes').length
 		  	};
 
@@ -1092,7 +1120,8 @@ $(function() {
 				        'color' 	: pickColor(seen, ep.airdate),
 				        'extra' 	: false,
 				        'hiding'	: false,
-				        'disabled'	: !hasItAired(ep.airdate)
+				        'disabled'	: !hasItAired(ep.airdate),
+				        'classDisabled' : hasItAired(ep.airdate)?'':'disabled'
   					};
 
 					el.append( episode_template(episode_templateData) );
@@ -1205,14 +1234,24 @@ $(function() {
 	function manage_set_all(showid, name, allSeen) {
 		console.log('manage_set_all() called');
 
-		result = _.first(myBools.filter(function(model) {
+		thisBools = _.first(myBools.filter(function(model) {
   			return model.get('show_id') == showid;
   		}));
 
-  		var tempArray = result.get('array');
+  		array = _.first(myShows.filter(function(model) {
+  			return model.get('show_id') == showid;
+  		})).get('episodes');
+
+  		var tempArray = thisBools.get('array');
   		_.each(tempArray, function(i_item, i_index) {
   			_.each(i_item, function(j_item, j_index) {
-  				tempArray[i_index][j_index] = allSeen;
+  				var hasAired = hasItAired(array[i_index][j_index].airdate);
+  				console.log(hasAired);
+  				if(!hasAired){
+	  				tempArray[i_index][j_index] = false;
+  				} else {
+	  				tempArray[i_index][j_index] = allSeen;
+  				}
   			});
   		});
 
@@ -1221,8 +1260,8 @@ $(function() {
   		} else {
 			toast('Queued all episodes of ' + name + '.');
   		}
-		result.set('array', tempArray);
-		result.save();
+		thisBools.set('array', tempArray);
+		thisBools.save();
 
 		update_queued();
 	}
@@ -1232,12 +1271,14 @@ $(function() {
 	function lenses_render(showid, season) {
 		// console.log('lenses_render('+showid+') called');
 
+		if(myBools.length==0 || myShows.length==0){return;}
+
 		if (_.isUndefined(showid)) {
 			_.each(myBools.models, function(model){
 				lenses_render(model.get('show_id'));
 			});
 		} else if (_.isUndefined(season)) {
-			console.log(showid);
+			// console.log(showid);
 			var array = _.first(_.filter(myBools.models, function(model) {
 				return (model.get('show_id') == showid);
 			})).get('array');
@@ -1245,7 +1286,7 @@ $(function() {
 				lenses_render(showid, i);
 			}
 		} else {
-			console.log(showid + ' ' + season);
+			// console.log(showid + ' ' + season);
 			var array = _.first(_.filter(myBools.models, function(model) {
 				return (model.get('show_id') == showid);
 			})).get('array');

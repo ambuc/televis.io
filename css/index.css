@@ -24,12 +24,19 @@
 		main {
 			flex: 1 0 auto;
 		}
-		.page-footer a {
-			color: #eee;
+		.page-footer{
+			margin-top:0px !important;
+		}
+		.page-footer #writtenwith{
+			color: lightgrey;
+		}
+		.page-footer #writtenwith a {
+			color: grey;
+			text-decoration: underline;
 		}
 	/*flat design*/
 		.navbar, nav, .nav-wrapper, .card, .collapsible,  .collapsible.popout li, .collapsible.popout li.active{
-			/*box-shadow: none;*/
+			box-shadow: none;
 			/*border: none;*/
 		}
 	/*better spacing for sections*/
