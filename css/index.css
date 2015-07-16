@@ -17,12 +17,18 @@
 		}
 	/*sticky footer*/
 		body {
-			display: flex;
-			min-height: 100vh;
-			flex-direction: column;
+			/*display: flex;*/
+			/*min-height: 100vh;*/
+			/*flex-direction: column;*/
 		}
 		main {
-			flex: 1 0 auto;
+			margin-top:-10px;
+			padding-top:10px;
+			/*flex: 1 0 auto;*/
+		}
+		.page-footer{
+			/*position: relative;*/
+			/*bottom:0px;*/
 		}
 		.page-footer{
 			margin-top:0px !important;
@@ -72,18 +78,10 @@
 		.btn, .btn-flat{ 
 			padding-left: 10px; 
 			padding-right: 10px;
-		}
-	/*no border no padding no margin*/
-		.btn, .btn-flat{
 			border-radius: 0px;
 			padding:0px margin:0px;
 		}
-	/*undo padding for large buttons*/
-		.btn-large, .btn-large:hover{
-			/*padding-left: 20px;*/
-			/*padding-right: 20px;*/
-			/*box-shadow: none;*/
-		}
+
 	/*better padding for episodes*/
 		section#queue a{
 			margin-bottom:5px;
@@ -122,52 +120,62 @@
 
 /*editor*/
 	/*better render of input field*/
-		#edit .input-field{
+		section#add .input-field{
 			padding: 10px;
 			padding-bottom:0px;
 			border-radius: 5px;
 		}
-	/*better margins for shows in #yourShows*/
-		#yourShows a { 
-			margin: 5px;
+		section#add #input{
+			color : #0097a7;
+			font-size: xx-large;
 		}
+
 	/*scroll in addShow tab*/
-		#add-show-choose #searchResults{
+		section#add ul#search-results{
 			overflow-y: scroll;
-			max-height:150px;
+			max-height:300px;
 		}
 
+/*section#manage*/
+	section#manage a.expand{
+		margin-top:13px;
+		margin-left:5px;
+	}
+	section#manage a.expand i{
+		padding-top:3px;
+	}
+	section#manage ul.collection{
+		border : none;
+	}
+	section#manage li.collection-item{
+	}
+	section#manage span.manage-expanded li{
+		border: none;
+	}
+	section#manage span.manage-expanded li.act-row .row{
+		padding-bottom: 0px;
+	}
+	section#manage span.manage-expanded li.nav-row .row{
+		padding-bottom: 0px;
+	}
+	section#manage span.manage-expanded li.nav-row a.seasonbtn:hover{
+		box-shadow: none; /*no button behavior on hover*/
+	}
+	section#manage span.manage-expanded li.eps-row .row{
+		padding-bottom: 0px;
+	}
+	section#manage span.manage-expanded li.act-row a{
+		width:100%;
+	}
+	section#manage .episodes .card{
+		padding-bottom:10px;
+		margin-bottom:20px;
+	}
+	section#manage p.lenses{
+		margin-left : 8px;
+	}
 
-/*calendar*/
-	/*no capitalization in queue*/
-		table#calendartable a{
-			text-transform: none;
-		}
-	/*fixed width*/
-		table#calendartable{
-			table-layout: fixed;
-		}
-	/*centered no border*/
-		table#calendartable td{ 
-			text-align: center;
-			border: 1px solid #eee;
-		}
-	/*today cell*/
-		table#calendartable .today{
-			border: 5px solid #ffcdd2;
-			background: #ffebee;
-		}
-	/*better spacing*/
-		table#calendartable .btn-flat{
-			padding-left:	5px;
-			padding-right: 	5px;
-			margin-top:2px;
-			margin-bottom:2px;
-			width:100%;
-		}
 
-/*dashboard*/
-	/*better widths in tab containers*/
-		.epsContainer{
-			width:100%;
-		}		
+
+
+

@@ -1,7 +1,15 @@
 //TODO
 
+//TODO: fix bug where you set  all seen / unseen but the view doesnt update
+
+//DOESNT WORK 4 BIG SETS
+//  fix calculate_queued and make it smarter / database-informed, possibly - as it is, televis.io breaks at ~10 shows
+
 //TODO: FETCH EPS OCCURS WHEN ADDING SHOW ALREADY ADDED
+//TODO: FLEXIBLE COMPARATORS
 //TODO: partial queue–render(showid), etc 
+
+//TODO: ADD - sometimes adds duplicate shows asynchronously
 //TODO: specific episode ADD
 //TODO: FETCH NEW EPS + EXPAND MYBOOLS
 //TODO: CALENDAR
@@ -70,7 +78,7 @@ $(function() {
 
 	var xhr; 					// one xhr request at a time, frien
 	var currentTab = ''; 		// which tab we're on
-	var defaultTab = 'queue';  // which tab to open on
+	var defaultTab = 'add';  // which tab to open on
 	var queueLimit = 3; 		// num of eps per show in q item
 	var _MS_PER_DAY = 1000 * 60 * 60 * 24; //stuff for date handling, from SE
 	// var today = Date.today();
@@ -137,6 +145,8 @@ $(function() {
 			displayTabs(false);		bindTabs(false);
 			displayWings(false); 	bindWings(false);
 			bg_recolor('default');
+			// $('ul#queue_full').empty();
+			// $('#manage_full').empty();
 
 			$('#totalQueued').empty();
 
@@ -208,21 +218,14 @@ $(function() {
 		} else {
 			$('main section').hide();
 			$('section#'+desiredTab).show();
-			tab_recolor(desiredTab);
 			bg_recolor(desiredTab);
 			tab_init(desiredTab);
 			currentTab = desiredTab;
-			checkStacks();
+			checkStacks(desiredTab);
 		}
 	}
 
-	//recolors tabs based on which tab was selected
-	function tab_recolor(desiredTab) {
-		$('.navtabs a').removeClass('btn-large darken-2');
-		$('.navtabs a').addClass('btn lighten-1');
-		$('.navtabs a#'+desiredTab).toggleClass('btn btn-large darken-2 lighten-1');
-	}
-
+	//recolors background to match selected tab
 	function bg_recolor(desiredTab){
 		$('main').css("background-color", tabColors[desiredTab]);
 	}
@@ -515,7 +518,7 @@ $(function() {
 	function cleanData(data) {
 		console.log('cleanData() called');
 
-		// console.log(data);
+		console.log(data);
 		// console.log('processing episodes');
 		var result = [];
 		if ( data.totalseasons == 1 ) { //weird case
@@ -565,7 +568,7 @@ $(function() {
 					myBools.add( result );
 					fetchShow( result.get('show_id') );
 				});
-				checkStacks();
+				checkStacks(currentTab);
 			}
 		});
 	}
@@ -581,7 +584,7 @@ $(function() {
 		showsQuery.find({
 			success: function(results) {
 				myShows.add( _.first(results) );
-				checkStacks();
+				checkStacks(currentTab);
 			}
 		});
 	}
@@ -594,7 +597,7 @@ $(function() {
 	//     $areQueued --> are there eps in the QUEUE?
 	//   and triggers the tab states accordingly
 	//   and renders the states accordingly
-	function checkStacks() {
+	function checkStacks(desiredTab) {
 		// console.log('checking stacks');
 
 		var isEqual = (myBools.length == myShows.length);
@@ -617,15 +620,18 @@ $(function() {
 			fixState('manage', 'thinking');
 			fixState('queue',  'thinking');
 
-			manage_render();
+			if(desiredTab == 'manage'){
+				manage_render();				
+			}
 
 			if(areQueued) {
 				//manage is full, queue is full
 				console.log('manage is full, queue is full');
 				fixState('manage', 'full');
 				fixState('queue',  'full');
-
-				queue_render();
+				if(desiredTab == 'queue'){
+					queue_render();
+				}
 			} else {
 				console.log('manage is full, queue is empty');
 				fixState('manage', 'full');
@@ -682,6 +688,8 @@ $(function() {
 			$('section#add .card-action a#add').show();
 			$('section#add input#input').val("");
 			$('section#add input#input').focus();
+		} else if (stage=='g') {
+
 		} else {
 			$('section#add .card-action a#cancel').show();
 			$('section#add .card-action a#cancel').click(function() {
@@ -864,7 +872,6 @@ $(function() {
 	  		var showTemplateData = {
 		        'showname'	: thisShow.get('name'),
 		        'unseen'	: calculate_queued(show_id),
-		        'shade'		: 'green',
 		        'showid'	: thisShow.get('show_id')
 		  	};
 
@@ -949,10 +956,6 @@ $(function() {
 
 	  		update_queued();
 
-	  		// $(this).toggleClass('lighten-3');
-
-	  		manage_render();
-	  		// checkStacks();
 	  	});
 
 	  	//toggle .extra on a.more click
@@ -982,11 +985,14 @@ $(function() {
 			var qd = calculate_queued();
 			if (qd == 0) { qd = 'Nothing'; }
 			var el = $("span#totalQueued");
-		} else {
+			el.html(qd);
+		} else { //if defined, update in queue / manage
 			var qd = calculate_queued(showid);
-			var el = $("section#queue li#"+showid+" span.unseen");
+			var q_el = $("section#queue li#"+showid+" span.unseen");
+			var m_el = $("section#manage span.unseen");
+			q_el.html(qd);
+			m_el.html(qd);
 		}
-		el.html(qd);
 	}
 
 	//calculates the viable episodes per season in a show
@@ -1015,6 +1021,8 @@ $(function() {
 	// if $showid exists, calculate just for that
 	//	else, calculate all qd
 	function calculate_queued(showid, season) {
+		// console.log('calculating queued');
+		
 		if (myBools.length != myShows.length) { return; } //skip if not ready
 
 		var num = 0;
@@ -1025,9 +1033,10 @@ $(function() {
 			});
 		} else {
 			//calculate just for one
-			var array = _.first(_.filter(myBools.models, function(i) {
+			var show = _.first(_.filter(myBools.models, function(i) {
 				return (i.get('show_id') == showid);
-			})).get('array');
+			}));
+			var array = show.get('array');
 
 			if(_.isUndefined(season)){
 				for(var i in _.range(array.length)){
@@ -1063,116 +1072,79 @@ $(function() {
 
 		//define templates
 	  	var manage_template				= _.template( $('#manage-item-template').html() );
-	  	var manage_details_template		= _.template( $('#manage-details-template').html() );
-		var episode_template			= _.template( $('#episode-template').html() );
 
 		//empty #manage_full
 		$("section#manage #manage_full").empty();
 
-
 		//print all elements
 		_.each(myShows.models, function(thisShow, index) {
 
-		  	var show_id 	= thisShow.get('show_id');
+		  	var show_id  = thisShow.get('show_id');
 	  		var episodes = thisShow.get('episodes');
 	  		var thisBool = _.find(myBools.models, function(item) { return item.get('show_id') === show_id; });
 	  		
 	  		var manage_data = {
 		        'showname'		: thisShow.get('name'),
 		        'unseen'		: calculate_queued(show_id),
-		        'shade'			: 'green',
 		        'showid'		: show_id,
 		        'num_seasons'	: thisShow.get('episodes').length
 		  	};
 
 			$("section#manage #manage_full").append( manage_template(manage_data) );
 
-			var manage_details_data = {
-				name 			: thisShow.get('name'),
-				classification	: thisShow.get('classification'),
-				country			: thisShow.get('country'),
-				started			: thisShow.get('started'),
-				ended			: thisShow.get('ended'),
-				status			: thisShow.get('status'),
-		        episodes 		: thisShow.get('episodes'),
-		        num_seasons 	: thisShow.get('episodes').length,
-		        showid 			: thisShow.get('show_id')
-		  	};
-
-			$("section#manage #manage_full").append( manage_details_template(manage_details_data) );
-
-			_.each(episodes, function(thisSeason, season_index) {
-				var el = $('section#manage #manage_full #'+show_id+'x'+season_index);
-
-				_.each(thisSeason, function(ep, ep_index) {
-
-					var seen = thisBool.get('array')[season_index][ep_index];
-
-  					var episode_templateData = {
-  						'showid' 	: show_id,
-  						'show_id' 	: show_id,
-				        's' 		: season_index+1,
-				        'e' 		: pad(ep_index+1, 2),
-				        'j' 		: season_index,
-				        'k' 		: ep_index,
-				        'title' 	: ep.title,
-				        'icon' 		: pickIcon(seen, ep.airdate),
-				        'color' 	: pickColor(seen, ep.airdate),
-				        'extra' 	: false,
-				        'hiding'	: false,
-				        'disabled'	: !hasItAired(ep.airdate),
-				        'classDisabled' : hasItAired(ep.airdate)?'':'disabled'
-  					};
-
-					el.append( episode_template(episode_templateData) );
-				});
-			});
 		});
-
-		//initialize all tabs
-		$('ul.tabs').tabs(); 
-
-		//hide item details
-		$('.manage-item-details').hide();
-		
-		//toggle seen/queued on a.episode click
-	  	$("section#manage a.episode").click(function() {
-	  		var showid	= $(this).attr('data-show');
-	  		var season	= $(this).attr('data-season');
-	  		var episode	= $(this).attr('data-episode');
-	  		
-	  		var disabled = $(this).attr('data-disabled');
-
-	  		if(disabled=='true') {return;}
-
-	  		toggleSeen(showid, season, episode);
-	  		
-	  		toggleEl($(this));
-	  		
-	  		queue_render();
-
-	  		update_queued();
-
-			lenses_render(showid, season);
-	  	});
 
 		//expand click behaviors
 		var isExpanded = false;
 
 		//expand div on a#expand click	
-		$('section#manage a#expand').click(function() {
-			$(this).parent().parent().next().toggle();
+		$('section#manage a.expand').click(function() {
 			if(isExpanded) { 
 				$(this).children('i').html('expand_more');
 				isExpanded = false;
+				var id = $(this).attr('id');
+				$("section#manage span#"+id+".manage-expanded").empty();
 			} else {
 				$(this).children('i').html('expand_less');
 				isExpanded = true;				
+
+				var id = $(this).attr('id');
+				var cinit = calculate_initial_display_season(id);
+
+				manage_actions_render(id);
+				manage_nav_render( id, cinit );
+				manage_season_render( id, cinit );
 			}
 		});
 
+		//update lenses at least once per render
+		lenses_render();
+	}
+
+
+	function manage_actions_render(id){
+		
+		var thisShow = _.first(_.filter(myShows.models, function(model) {
+			return (model.get('show_id') == id);
+		}));
+
+	  	var template	= _.template( 
+	  		$('#manage-actions-template').html() 
+  		);
+
+  		var data = {
+  			showid 	: 	thisShow.get('show_id'),
+  			name 	: 	thisShow.get('name'),
+  		}
+
+		$('span#'+id+'.manage-expanded').append(
+			template(data)
+		)
+
+		$('.act-row a').unbind()
+
 		//take action on a.click
-		$('section#manage .card-action a').click(function() {
+		$('.act-row a').click(function() {
 			var showid 	= $(this).attr('data-id');
 			var name 	= $(this).attr('data-name');
 			var action 	= $(this).attr('id');
@@ -1186,15 +1158,127 @@ $(function() {
 			//don't re-render - just toggleSeen for all eps in shw
 			//for each .episode
 
-			_.each($('.manage-item-details a.episode'), function(i) {
+
+			//BUG BUG BUG BUG BUG BUG BUG BUG BUG
+			_.each($('.manage-expanded#episodes a.episode'), function(i) {
 				toggleEl($(i));
 			});
 
+			update_queued();
+			update_queued(showid);
+
 			lenses_render(showid);
 		});
+	}
 
-		//update lenses at least once per render
-		lenses_render();
+	function manage_season_render(id, season_index){
+
+		var thisShow = _.first(_.filter(myShows.models, function(model) {
+			return (model.get('show_id') == id);
+		}));
+  		var thisBool = _.find(myBools.models, function(item) { return item.get('show_id') == id; });
+
+  		var episodes = thisShow.get('episodes');
+
+		var season_template = _.template( $('#manage-season-template').html() );
+
+		var episode_template = _.template( $('#episode-template').html() );
+
+		var season_el = $('span#'+id+'.manage-expanded');
+		
+		season_el.append( season_template() );
+
+		var eps_el = $('li.eps-row div div#box');
+  		// console.log(eps_el);
+
+  		// var el = $('section#manage .manage-expanded div.episodes div#'+id+'x'+season_index);
+		_.each(episodes[season_index], function(ep, ep_index) {
+
+			var seen = thisBool.get('array')[season_index][ep_index];
+
+				var episode_templateData = {
+					'showid' 	: id,
+					'show_id' 	: id,
+			        's' 		: season_index+1,
+			        'e' 		: pad(ep_index+1, 2),
+			        'j' 		: season_index,
+			        'k' 		: ep_index,
+			        'title' 	: ep.title,
+			        'icon' 		: pickIcon(seen, ep.airdate),
+			        'color' 	: pickColor(seen, ep.airdate),
+			        'extra' 	: false,
+			        'hiding'	: false,
+			        'disabled'	: !hasItAired(ep.airdate),
+			        'classDisabled' : hasItAired(ep.airdate)?'':'disabled'
+				};
+
+			eps_el.append( episode_template(episode_templateData) );
+		});
+
+		//toggle seen/queued on a.episode click
+	  	$("section#manage a.episode").click(function() {
+	  		var showid	= $(this).attr('data-show');
+	  		var season	= $(this).attr('data-season');
+	  		var episode	= $(this).attr('data-episode');
+	  		
+	  		var disabled = $(this).attr('data-disabled');
+
+	  		if(disabled=='true') {return;}
+
+	  		toggleSeen(showid, season, episode); //toggles the data backend - sends a parse query
+	  		
+	  		toggleEl($(this)); //toggles the visual appearance
+	  		
+			update_queued(); //in navbar
+			update_queued(showid); //in manage side
+
+			lenses_render(id, season_index); //rerenders lenses - but only the necessary one
+	  	});
+	}
+
+	function manage_nav_render(id, season_index){
+		var thisShow = _.first(_.filter(myShows.models, function(model) {
+			return (model.get('show_id') == id);
+		}));
+
+	  	var template	= _.template( 
+	  		$('#manage-nav-template').html() 
+  		);
+
+  		var data = {
+  			'showid' 	 	: 	id,
+  			'season_index' 	: 	season_index,
+  			'season_num'	:  	String(season_index+1), 
+  			'num_seasons'	: 	thisShow.get('episodes').length
+  		}
+
+		$('span#'+id+'.manage-expanded').append(
+			template(data)
+		)
+
+		$('li.nav-row a').unbind();
+
+		$('li.nav-row a#left, li.nav-row a#right').click(function() {
+			$('span#'+id+'.manage-expanded').empty();
+			manage_actions_render( id );
+
+			var direction = $(this).attr('id');
+			var index = $(this).attr('data_index');
+			var newIndex = index;
+
+			if ( direction == 'left' ){
+				newIndex--;
+			} else if ( direction == 'right' ) {
+				newIndex++;
+			}
+
+			manage_nav_render( id, newIndex );
+			manage_season_render( id, newIndex );
+
+			// console.log(direction);
+			// console.log(index);
+		});
+
 	}
 
 	//toggles an episode's element block
@@ -1225,9 +1309,10 @@ $(function() {
   		boolResult.destroy(); //destroy bool
   		myShows.remove(showResult); //remove show
 
-		$('#manage_full li#'+showid).remove(); //destroy divs
+		$('section#manage span#'+showid+'.manage-expanded').remove(); //destroy all relevant divs
+		$('section#manage li.manage-item#'+showid).remove(); //destroy all relevant divs
 
-		checkStacks();			
+		update_queued();			
 	}
 
 	//sets all seen / queued for a show
@@ -1366,6 +1451,31 @@ $(function() {
 		return n.length >= w ? n : new Array(w - n.length + 1).join(z) + n;
 	}
 
+	//given a show $id, calculates the index of the season on which to open the tab -- if the first season is entirely seen, start from the second
+	function calculate_initial_display_season(id){
+		var array = _.first(_.filter(myBools.models, function(model) {
+				return (model.get('show_id') == id);
+		})).get('array');
+
+		var initial_display_season = 0;
+		var found = false;
+		for (var i = 0; i < array.length; i++){
+			for (var j = 0; j < array[i].length; j++){
+				if (array[i][j] == false && found == false){
+					initial_display_season = i;
+					found = true;
+				}
+			}
+		}
+
+		if(found == false){
+			initial_display_season = array.length;
+			found = true;
+		}
+
+		return initial_display_season;
+	}
+
 	//returns a boolean; true if the $date is before global $today
 	function hasItAired(airdate) {
 		return moment(airdate).isBefore();
@@ -1376,7 +1486,7 @@ $(function() {
 		if (!hasItAired(airdate)) {
 			return 'select_all';
 		} else {
-			return isSeen ? 'check_box_outline_blank' : 'check_box';			
+			return !isSeen ? 'check_box_outline_blank' : 'check_box';			
 		}
 	}
 
@@ -1390,7 +1500,7 @@ $(function() {
 
 	//returns a capitalized $string
 	function capitalize(string) {
-	    return string.charAt(0).toUpperCase() + string.slice(1);
+	    return string.toUpperCase();
 	}
 
 });
