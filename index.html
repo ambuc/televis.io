@@ -1,20 +1,25 @@
 <!DOCTYPE html>
 <html>
+
   <head>
     <title>televis.io</title>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.0/css/materialize.min.css">
+    <!-- CSS STYLING -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.0/css/materialize.min.css"> <!-- must be cdn -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  
     <link rel="stylesheet" href="css/index.css">         
+    
+    <!-- FAUX APP BEHAVIOR -->
     <link rel="apple-touch-startup-image" href="/apple-touch-icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <!-- <meta name="apple-mobile-web-app-status-bar-style" content="black"> -->
 
+    <!-- META -->
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+
   </head>
-  <body class=''>
+
+  <body>
 
 <!---- -- HEADER -- -- -->
 
@@ -33,13 +38,13 @@
             
             <ul class="right tabsblock">
               
-              <li class='cyan lighten-2 '><a class='waves-effect' id='add'> 
+              <li class='grey lighten-1'><a class='waves-effect' id='add'> 
                 <i class='material-icons hide-on-large-only'>add</i>
                 <i class='material-icons left hide-on-med-and-down'>add</i>
                 <span class='hide-on-med-and-down'>Add</span> 
               </a></li>
 
-              <li class='cyan'><a class='waves-effect' id='queue'> 
+              <li class='grey'><a class='waves-effect' id='queue'> 
                 <i class='material-icons hide-on-large-only'>new_releases</i>
                 <i class='material-icons left hide-on-med-and-down'>new_releases</i>
                 <span class='hide-on-med-and-down'>
@@ -48,7 +53,7 @@
                 </span>
               </a> </li>
 
-              <li class='cyan darken-2'><a class='waves-effect' id='manage'> 
+              <li class='grey darken-1'><a class='waves-effect' id='manage'> 
                 <i class='material-icons hide-on-large-only'>settings</i>
                 <i class='material-icons left hide-on-med-and-down'>settings</i>
                 <span class='hide-on-med-and-down'>Manage</span> 
@@ -59,63 +64,6 @@
         </nav>
       </div>
 
-      <!-- <div class="navbar-fixed">
-        <nav>
-          <div class="nav-wrapper blue lighten-2">
-            <div class='container'>
-              <ul id="nav-mobile" class="left">
-                <li>
-                  <a href="#" id='whoami'>
-                    <i class='material-icons left hide-on-small-only'>perm_identity</i>
-                    <span></span>
-                  </a>
-                </li>
-              </ul>
-              <div href="#" class="brand-logo center"> 
-                <i class="material-icons left hide-on-small-only">dvr</i>
-                televis.io 
-              </div>
-              
-              <ul id="nav-mobile" class="right">
-                <li>
-                  <a id='logio'>
-                    <i class='material-icons right hide-on-small-only'>exit_to_app</i>
-                    Log Out
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </nav>
-      </div>
-
-      <div class='container'>
-        <div class="col l12 m12 s12 tabsblock" style="display: block;">
-          <ul class="navtabs center-align row"> 
-            <li class="col s4">
-              <a id="add" class="waves-effect blue lighten-1 white-text btn-large">
-                <i class="material-icons left hide-on-small-only">add</i>
-                <i class="material-icons hide-on-med-and-up">add</i>
-                <span class='hide-on-small-only'>Add</span>
-              </a>
-            </li>
-            <li class="col s4">
-              <a id="queue" class="waves-effect blue darken-2 white-text btn-large">
-                <i class="material-icons left hide-on-small-only">new_releases</i>
-                <span id='totalQueued'></span> <span class='hide-on-med-and-down'>in queue </span>
-              </a>
-            </li>
-            <li class="col s4">
-              <a id="manage" class="waves-effect blue lighten-1 white-text btn-large">
-                <i class="material-icons left hide-on-small-only">settings</i>
-                <i class="material-icons hide-on-med-and-up">settings</i>
-                <span class='hide-on-small-only'>Manage</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
- -->
     </header>
 
     <main>
@@ -147,7 +95,7 @@
             </div>
 
             <div class="card-action"> 
-                <a class="waves-effect btn-large   red white-text" id='cancel'>
+                <a class="waves-effect btn-large red white-text" id='cancel'>
                   <i class='material-icons left hide-on-small-only'>backspace</i>
                   <i class='material-icons hide-on-med-and-up'>backspace</i>
                   <span class=' hide-on-small-only'>Cancel</span>
@@ -195,6 +143,7 @@
                     </div>
                   </div>
                 </div>
+                <br/><br/>
               </div>
 
               <div class='center-align' id='queue_empty'>
@@ -220,9 +169,11 @@
 
         <script type="text/template" id="queue-item-template">
           <li class="collection-item avatar" id= <%=showid%> >
-            <i class="material-icons circle">tv</i>
+            <a class='btn-floating btn-waves circle blue watch' id = <%=showid%> >
+              <i class='material-icons white-text'>remove_red_eye</i>
+            </a>
             <span class="title">
-              <a class='btn-flat white'>
+              <a class='btn btn-flat white'>
                 <%=showname%>
                 <span class='grey-text hide-on-med-and-up'> <span class='unseen'> <%=unseen%> </span> </span>
               </a>
@@ -236,7 +187,7 @@
         </script>
 
         <script type="text/template" id="episode-template">
-          <a class='episode btn <%=color%> white-text truncate <%=extra?'extra':''%> <%=classDisabled%>' style='display:<%=hiding%>;' data-show=<%=show_id%> data-season=<%=j%> data-episode=<%=k%> data-disabled=<%=disabled%>>
+          <a class='episode btn <%=color%> white-text truncate <%=overflow?'overflow':''%> <%=classDisabled%>' style='display:<%=hiding%>;' data-show=<%=show_id%> data-season=<%=j%> data-episode=<%=k%> data-disabled=<%=disabled%> data-seen=<%=seen%> data-overflow=<%=overflow%> data-airdate=<%=airdate%> >
             <i class="material-icons left"><%=icon%></i>
             <span class=''><%=s%>x<%=e%> </span>
             <span class=''><%=title%> </span>
@@ -359,7 +310,7 @@
                     <span id='AddShowButtonText'>Cancel</span>
                   </a>
                 </div> <!-- card-action -->
-                
+
               </div> <!-- card -->
             </div> <!-- second column -->
 
@@ -404,6 +355,7 @@
                       </div>
                     </div>
                   </div>
+                <br/><br/>
               </div>
 
               <div class='center-align' id='manage_empty'>
@@ -526,20 +478,32 @@
         <div class='row'>
           <div class='col s6'>
             <a href="http://ambuc.github.io" class='btn-large light-blue lighten-1 white-text waves-effect left'> 
-              <i class='material-icons left'>face</i>
-              by james buckland
+              <span class='hide-on-small-only'>
+                <i class='material-icons left'>face</i>
+                by james buckland
+              </span>
+              <i class='material-icons hide-on-med-and-up'>face</i>
             </a>
           </div>
           <div class='col s6'>
             <a class='btn-large red lighten-1 white-text waves-effect right' id='logio'> 
-              <i class='material-icons left'>eject</i>
-              Log Out
+              <i class='material-icons hide-on-small-only left'>eject</i>
+              <i class='material-icons hide-on-med-and-up'>eject</i>
+
+              <span class='hide-on-small-only'>Log Out</span>
+
             </a>
           </div>
         </div>
         <div class='row'>
           <div class='col s12' id='writtenwith'>
-            Data from the <a href="http://www.tvrage.com/">TVRage API</a>. Built with <a href="http://parse.com">Parse</a> + <a href="backbonejs.org">Backbone.js</a> + <a href="http://underscorejs.org">Underscore.js</a> + <a href="https://code.jquery.com/">jQuery</a> + <a href="http://momentjs.com/">Moment.js</a>. Styled with <a href="http://materializecss.com">Materialize</a>.
+            Data from the <a href="http://www.tvrage.com/">TVRage API</a>.
+            Built with <a href="http://parse.com">Parse</a> 
+            + <a href="backbonejs.org">Backbone.js</a> 
+            + <a href="http://underscorejs.org">Underscore.js</a> 
+            + <a href="https://code.jquery.com/">jQuery</a> 
+            + <a href="http://momentjs.com/">Moment.js</a>. 
+            Styled with <a href="http://materializecss.com">Materialize</a>.
           </div>
         </div>
       </div>
@@ -549,24 +513,26 @@
 
 <!-- -- -- -- JAVASCRIPT -- -- -- -->
 
-  <script src="lib/jquery-2.1.4.js"></script>
-  <!-- // <script src="http://www.parsecdn.com/js/parse-1.4.2.min.js"></script> -->
-  <script src="lib/parse-1.4.2.min.js"></script>
-  <!-- // <script src="lib/backbone.js"></script> -->
+<script src="js/lib/jquery.min.js"></script>
+<script src="js/lib/parse.min.js"></script>
+<script src="js/lib/underscore.min.js"></script>
+<script src="js/lib/materialize.min.js"></script>
+<script src="js/lib/moment.min.js"></script>
 
-  <!-- // <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script> -->
-  <script src="lib/underscore-min.js"></script>
+<script src="js/mod/login.js"></script>
+<script src="js/mod/onboarding.js"></script>
+<script src="js/mod/add.js"></script>
+<script src="js/mod/queue.js"></script>
+<script src="js/mod/manage.js"></script>
 
-  <!-- // <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.0/js/materialize.min.js"></script> -->
-  <script src="lib/materialize.min.js"></script>
+<script src="js/app.js"></script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.min.js"></script>
-  <!-- // <script src="lib/date.min.js"></script> -->
-
-  <script src="lib/jquery.xdomainajax.js"></script>
-
-  <script src="lib/xml2json.min.js"></script>
-
-  <script src="js/televisio.js"></script>
+<script type="text/javascript">
+  fix_state('manage', 'thinking');
+  fix_state('queue',  'thinking');
+  $(document).ready(function() {
+    try_login();
+  });
+</script>
 
 </html>

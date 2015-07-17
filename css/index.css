@@ -1,9 +1,16 @@
-/*	
-	|  _ _|_ _|_     _   /~`(~(~
-	|<(/_ | (_| ||_||_)  \_,_)_)
-	                |           
-*/		
+/**
+ **  _       _            _       _       
+ ** | |_ ___| | _____   _(_)___  (_) ___  
+ ** | __/ _ \ |/ _ \ \ / / / __| | |/ _ \ 
+ ** | ||  __/ |  __/\ V /| \__ \_| | (_) |
+ **  \__\___|_|\___| \_/ |_|___(_)_|\___/ 
+ **
+ ** CSS STYLING FILE
+ **
+ **/
 
+main{
+}
 
 /*universal*/
 	/*no text selection despite double click*/
@@ -41,9 +48,8 @@
 			text-decoration: underline;
 		}
 	/*flat design*/
-		.navbar, nav, .nav-wrapper, .card, .collapsible,  .collapsible.popout li, .collapsible.popout li.active{
-			box-shadow: none;
-			/*border: none;*/
+		.navbar, nav, .nav-wrapper{
+			/*box-shadow: none;*/
 		}
 	/*better spacing for sections*/
 		section { 
@@ -117,6 +123,31 @@
 			/*padding:0px;*/
 			border-radius: 0px;
 		}
+	/*larger queue show names*/
+		section#queue .collection-item span.title a.btn{
+			font-size: larger;
+		}
+	/*better row padding for queue body*/
+		section#queue .row{
+			padding-bottom:0px;
+		}
+	section#queue a.watch{
+		/*margin-top:13px;*/
+		/*margin-left:5px;*/
+	}
+	section#queue a.watch i{
+		padding-top:3px;
+	}
+	section#queue ul.collection{
+		border : none;
+	}
+	section#queue li.collection-item{
+	}
+	section#queue span.manage-expanded li{
+		border: none;
+	}
+
+
 
 /*editor*/
 	/*better render of input field*/
@@ -173,6 +204,9 @@
 	}
 	section#manage p.lenses{
 		margin-left : 8px;
+	}
+	section#queue .row{
+		padding-bottom:0px;
 	}
 
 
