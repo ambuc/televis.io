@@ -15,7 +15,7 @@ function queue_render() {
 
 	update_queued();
 
-	$("section#queue #queue_full").empty(); //empty #queue_full with each render
+	$("section#queue ul#queue_items").empty(); //empty #queue_full with each render
   	
   	//render each show in myShows
   	_.each(myShows.models, function(thisShow) {
@@ -39,6 +39,27 @@ function queue_render() {
 	$("section#queue a.watch").click(function(){
 		queue_watch($(this));
 	});
+
+	$('div#queue_settings a.sortby').click(function(){
+		$('div#queue_settings a.sortby').addClass('white grey-text');
+		$('div#queue_settings a.sortby').removeClass('grey white-text');
+		$(this).toggleClass('white grey white-text grey-text');
+		queue_sort($(this).attr('id'));
+	});
+
+}
+
+function queue_sort(type){
+	if(type!=comparatorType){
+		myShows.swapComparator(type);
+		myShows.sort();
+		// console.log(myShows.models);
+		queue_render();
+		console.log(type);
+		comparatorType = type;
+	} else {
+		return;
+	}
 }
 
 //renders a particular show in the queue
@@ -61,11 +82,11 @@ function queue_render_show(show){
 	    'showid'	: show.get('show_id')
 	};
 
-	$("section#queue #queue_full").append(
+	$("section#queue ul#queue_items").append(
 		showTemplate(showData)
 	);
 
-	var el = $("section#queue #queue_full li#"+show_id);
+	var el = $("section#queue ul#queue_items li#"+show_id);
 
 	//these are all show-specific
 	var library = show.get('episodes');
@@ -108,7 +129,7 @@ function queue_render_show(show){
 		        'seen'		: seen
 			};
 
-			$("section#queue #queue_full li#"+show_id+" p").append( 
+			$("section#queue ul#queue_items li#"+show_id+" p").append( 
 				episode_template(epData) 
 			);
 		});
@@ -214,7 +235,6 @@ function calculate_viable(showid, season){
 // if $showid exists, calculate just for that
 //	else, calculate all qd
 function calculate_queued(showid, season) {
-	// console.log('calculating queued');
 
 	if (myBools.length != myShows.length) { return; } //skip if not ready
 
@@ -224,7 +244,7 @@ function calculate_queued(showid, season) {
 		_.each(myBools.models, function(boolModel) {
 			num += calculate_queued(boolModel.get('show_id'));
 		});
-	} else {
+	} else { //if showid is defined
 		//calculate just for one
 		var show = myBools.match(showid);
 		if(_.isUndefined(show)){
@@ -236,7 +256,7 @@ function calculate_queued(showid, season) {
 			for(var i in _.range(array.length)){
 				num += calculate_queued(showid, i);
 			}
-		} else {
+		} else { //if season is defined
 			var eps = myShows.match(showid).get('episodes');
 
 			_.each(array[season], function(e, j) {

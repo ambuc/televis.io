@@ -2,11 +2,11 @@
 // 	-	BUGS
 // 		-	EMPTY panel for when there's a new season but no eps in it
 // 		-	DUPLICATES when adding a show twice in succession
+		// - CANNOT ADD SHOWS IF JUST LOGGED IN FOR THE FIRST TIME
 // 	-	FEATURES
 // 		-	AUTO-UPDATE shows !!! !!!
 // 		-	SUPPORT larger data sets
 // 		-	ADD specific episodes
-// 		-	ADD flexible comparators
 // 		-	ADD calendar
 // 	-	OPTIMIZATIONS
 // 		-	CALCULATE_QUEUED should be simple array not _.underscore
@@ -28,6 +28,7 @@ var xhr; 					// one xhr request at a time, frien
 var currentTab = ''; 		// which tab we're on
 var defaultTab = 'queue';  // which tab to open on
 var queueLimit = 3; 		// num of eps per show in q item
+var comparatorType = 'date';
 
 var _MS_PER_DAY = 1000 * 60 * 60 * 24; //stuff for date handling, from SE
 // var today = Date.today();
@@ -82,9 +83,15 @@ var BoolStack = Parse.Collection.extend({
 
 var ShowStack = Parse.Collection.extend({
 	model: Show,
-	comparator: function(model) {
+	comparator: function(model) { 
+		// by name
 		// return model.get('name');
-		return -calculate_queued(model.get('show_id'));
+
+		// by queued
+		// return -calculate_queued(model.get('show_id'));
+
+		// by airdate
+		return -calculate_mostRecentAirdate(model.get('show_id'));
 	},
 	initialize : function() {
 		console.log('ShowStack initialized');
@@ -96,6 +103,21 @@ var ShowStack = Parse.Collection.extend({
 		return _.filter(this.models, function(model) {
 			return (model.get('show_id') == id);
 		});
+	},
+	swapComparator: function(type){
+		if (type == 'alpha'){
+			this.comparator = function(model) { 
+				return model.get('name');
+			}
+		} else if (type == 'date'){
+			this.comparator = function(model) { 
+				return -calculate_mostRecentAirdate(model.get('show_id'));
+			}
+		} else if (type == 'queued'){
+			this.comparator = function(model) { 
+				return -calculate_queued(model.get('show_id'));
+			}
+		}
 	}
 });
 
@@ -302,15 +324,12 @@ function check_stacks(desiredTab) {
 		fix_state('manage', 'thinking');
 		fix_state('queue',  'thinking');
 
-		if(desiredTab == 'manage'){
-			render_manage();				
-		}
-
 		if(areQueued) {
 			//manage is full, queue is full
 			console.log('manage is full, queue is full');
 			fix_state('manage', 'full');
 			fix_state('queue',  'full');
+			
 			if(desiredTab == 'queue'){
 				queue_render();
 			}
@@ -318,6 +337,10 @@ function check_stacks(desiredTab) {
 			console.log('manage is full, queue is empty');
 			fix_state('manage', 'full');
 			fix_state('queue',  'empty');
+		}
+
+		if(desiredTab == 'manage'){
+			render_manage();				
 		}
 	} else {
 		//manage is empty, queue is empty
@@ -347,7 +370,8 @@ function fix_state(tab, state) {
 
 //toggles an episode's element block
 function toggle_el(el) {
-	el.toggleClass('lighten-2');
+	el.toggleClass('green lighten-2');
+	// el.toggleClass('btn-flat');
 
 	if( el.children('i').html()=='check_box' ) {
 		el.children('i').html('check_box_outline_blank');

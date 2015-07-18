@@ -109,6 +109,16 @@ main{
 	section#queue a.watch i{
 		padding-top:3px;
 	}
+	section div#queue_settings{
+		margin-top : 10px;
+	}
+	section div#queue_settings a{
+		display:block;
+		border-radius:10px;
+	}
+	section div#queue_settings a:hover{
+		box-shadow: none;
+	}
 	section#queue ul.collection{
 		border : none;
 	}

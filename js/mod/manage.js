@@ -20,7 +20,9 @@ function render_manage() {
 	}
 
 	//define templates
-  	var manage_template				= _.template( $('#manage-item-template').html() );
+  	var manage_template = _.template( 
+  		$('#manage-item-template').html() 
+	);
 
 	//empty #manage_full
 	$("section#manage #manage_full").empty();
@@ -30,7 +32,7 @@ function render_manage() {
 
 	  	var show_id  = thisShow.get('show_id');
   		var episodes = thisShow.get('episodes');
-  		var thisBool = _.find(myBools.models, function(item) { return item.get('show_id') === show_id; });
+  		var thisBool = myBools.match(show_id);
   		
   		var manage_data = {
 	        'showname'		: thisShow.get('name'),
@@ -39,7 +41,9 @@ function render_manage() {
 	        'num_seasons'	: thisShow.get('episodes').length
 	  	};
 
-		$("section#manage #manage_full").append( manage_template(manage_data) );
+		$("section#manage #manage_full").append( 
+			manage_template(manage_data) 
+		);
 
 	});
 
@@ -67,7 +71,8 @@ function render_manage() {
 	});
 
 	//update lenses at least once per render
-	render_lenses();
+	_.defer(render_lenses);
+
 }
 
 //renders the ACTIONS panel within an expanded MANAGE item
@@ -222,7 +227,6 @@ function render_lenses(showid, season) {
 			render_lenses(model.get('show_id'));
 		});
 	} else if (_.isUndefined(season)) {
-		// console.log(showid);
 		var show = myBools.match(showid);
 		
 		if(_.isUndefined(show)){ return; }
@@ -233,35 +237,36 @@ function render_lenses(showid, season) {
 			render_lenses(showid, i);
 		}
 	} else {
-		// console.log(showid + ' ' + season);
 		var show = myBools.match(showid);
-
 		if(_.isUndefined(show)){ return; }
+		var len = show.get('array')[season].length;
+		render_lens(showid, season, len);
+	}
+}
+
+function render_lens(showid, season, len){
+	// console.log('render_lens('+showid+') called on season('+season+')');
+
+	for(var i in _.range(len)) {
 		
-		var array = show.get('array');
+		//of the form #12345x0dot, where 12345 is the showid and 0 is the season index
+		var el = $( '#' + showid + 'x' + i + 'dot');
 
-		for(var i in _.range(array[season].length)){
-			
-			//of the form #12345x0dot, where 12345 is the showid and 0 is the season index
-			var el = $( '#' + showid + 'x' + i + 'dot');
+		el.attr('class', 'material-icons'); //removes all classes except one
 
-			el.attr('class', 'material-icons'); //removes all classes except one
-
-			if (calculate_queued(showid, i) == 0) { 
-				//completely seen season
-				el.html('radio_button_unchecked');
-				el.addClass('light-green-text');
-			} else if (calculate_queued(showid, i) == calculate_viable(showid, i)) { 
-				//completely unseen season
-				el.html('lens');
-				el.addClass('green-text');
-			} else {
-				//partially seen season
-				el.html('timelapse');
-				el.addClass('light-green-text');					
-			}
+		if (calculate_queued(showid, i) == 0) { 
+			//completely seen season
+			el.html('radio_button_unchecked');
+			el.addClass('light-green-text');
+		} else if (calculate_queued(showid, i) == calculate_viable(showid, i)) { 
+			//completely unseen season
+			el.html('lens');
+			el.addClass('green-text');
+		} else {
+			//partially seen season
+			el.html('timelapse');
+			el.addClass('light-green-text');					
 		}
-	
 	}
 }
 

@@ -91,8 +91,15 @@ function calculate_whichFrom(id){
 
 	return {
 		's' : season,
-		'e': episode
+		'e' : episode
 	};
+}
+
+//given a show $id, 
+//calculates the date of the most recent unseen episode
+function calculate_mostRecentAirdate(id){
+	var obj = calculate_whichFrom(id);
+	return moment( myShows.match(id).get('episodes')[obj['s']][obj['e']].airdate ).unix();
 }
 
 //returns a boolean; true if the $date is before global $today
@@ -122,4 +129,11 @@ function pick_color(isSeen, airdate) {
 //returns a capitalized $string
 function capitalize(string) {
     return string.toUpperCase();
+}
+
+function async(your_function, callback) {
+    setTimeout(function() {
+        your_function();
+        if (callback) {callback();}
+    }, 0);
 }
