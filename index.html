@@ -26,25 +26,25 @@
     <header>
 
       <div class='navbar-fixed'>
-        <nav class='white lighten-2'>
+        <nav class=''>
           <div class="nav-wrapper">
 
             <ul class='left hide-on-large'>
-              <li><a class='waves-effect' id='add'> 
-                  <i class='material-icons black-text left'>dvr</i>
-                  <span class='hide-on-small-only black-text'> televis.io</span>
+              <li><a class='waves-effect' id='title'> 
+                  <i class='material-icons white-text left'>dvr</i>
+                  <span class='hide-on-small-only white-text'> televis.io</span>
               </a></li>
             </ul>
             
             <ul class="right tabsblock">
               
-              <li class='grey lighten-1'><a class='waves-effect' id='add'> 
+              <li class=''><a class='waves-effect' id='add'> 
                 <i class='material-icons hide-on-large-only'>add</i>
                 <i class='material-icons left hide-on-med-and-down'>add</i>
                 <span class='hide-on-med-and-down'>Add</span> 
               </a></li>
 
-              <li class='grey'><a class='waves-effect' id='queue'> 
+              <li class=''><a class='waves-effect' id='queue'> 
                 <i class='material-icons hide-on-large-only'>new_releases</i>
                 <i class='material-icons left hide-on-med-and-down'>new_releases</i>
                 <span class='hide-on-med-and-down'>
@@ -53,7 +53,7 @@
                 </span>
               </a> </li>
 
-              <li class='grey darken-1'><a class='waves-effect' id='manage'> 
+              <li class=''><a class='waves-effect' id='manage'> 
                 <i class='material-icons hide-on-large-only'>settings</i>
                 <i class='material-icons left hide-on-med-and-down'>settings</i>
                 <span class='hide-on-med-and-down'>Manage</span> 
@@ -63,7 +63,6 @@
           </div>
         </nav>
       </div>
-
     </header>
 
     <main>
@@ -169,7 +168,7 @@
 
         <script type="text/template" id="queue-item-template">
           <li class="collection-item avatar" id= <%=showid%> >
-            <a class='btn-floating btn-waves circle blue watch' id = <%=showid%> >
+            <a class='btn-floating btn-waves circle blue watch tooltipped' id = <%=showid%> data-position="right" data-delay="50" data-tooltip="Watch Next Episode of <%=showname%>" >
               <i class='material-icons white-text'>remove_red_eye</i>
             </a>
             <span class="title">
@@ -209,7 +208,7 @@
           <div class='row'>
 
             <div class='col s12 m12 l12'>
-              <div class="card white lighten-3" onclick="$('#AddShowTitle').focus();">                
+              <div class="card white lighten-3" onclick="$('#AddShowTitle').focus();">
 
                 <div class="card-content" id='add-content-a'>
                   <!-- <h5> What's a show you watch? </h5> -->
@@ -524,6 +523,7 @@
 <script src="js/mod/add.js"></script>
 <script src="js/mod/queue.js"></script>
 <script src="js/mod/manage.js"></script>
+<script src="js/mod/util.js"></script>
 
 <script src="js/app.js"></script>
 

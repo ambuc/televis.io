@@ -6,7 +6,7 @@
 //
 // TELEVIS.IO LOGIN/LOGOUT FUNCTIONS
 
-//returns boolean
+//returns true if logged in
 function is_logged_in() {
 	if (Parse.User.current()) {
 		return true;
@@ -15,7 +15,7 @@ function is_logged_in() {
 	}
 }
 
-//checks if logged in.
+//if logged in, starts app; else, onboards
 function try_login() {
 	// console.log(is_logged_in());
 
@@ -33,9 +33,9 @@ function try_login() {
 	}
 }
 
-//tries to log out.
+//if logged in, logs out. else, nothing
 function try_logout() {
-	console.log('try_logout() called');
+	// console.log('try_logout() called');
 	if(is_logged_in()) {
 		make_toast('Bye, ' + Parse.User.current().get('username') + '!');
 		Parse.User.logOut();

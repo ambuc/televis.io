@@ -70,12 +70,10 @@ function render_manage() {
 	render_lenses();
 }
 
-
+//renders the ACTIONS panel within an expanded MANAGE item
 function render_manage_actions(id){
 	
-	var thisShow = _.first(_.filter(myShows.models, function(model) {
-		return (model.get('show_id') == id);
-	}));
+	var thisShow = myShows.match(id);
 
   	var template	= _.template( 
   		$('#manage-actions-template').html() 
@@ -94,18 +92,64 @@ function render_manage_actions(id){
 
 	//take action on a.click
 	$('.act-row a').click(function() {
-		manage_action($(this));
+		var showid	= $(this).attr('data-id');
+		var name	= $(this).attr('data-name');
+		var action	= $(this).attr('id');
+		manage_action(showid, name, action);
 	});
 }
 
+//renders the NAV panel within an expanded MANAGE item
+function render_manage_nav(id, season_index){
+	var thisShow = myShows.match(id);
+
+  	var template	= _.template( 
+  		$('#manage-nav-template').html() 
+		);
+
+		var data = {
+			'showid' 	 	: 	id,
+			'season_index' 	: 	season_index,
+			'season_num'	:  	String(season_index+1), 
+			'num_seasons'	: 	thisShow.get('episodes').length
+		}
+
+	$('span#'+id+'.manage-expanded').append(
+		template(data)
+	)
+
+	$('li.nav-row a').unbind();
+
+	$('li.nav-row a#left, li.nav-row a#right').click(function() {
+		$('span#'+id+'.manage-expanded').empty();
+		render_manage_actions( id );
+
+		var direction = $(this).attr('id');
+		var index = $(this).attr('data_index');
+		var newIndex = index;
+
+		if ( direction == 'left' ){
+			newIndex--;
+		} else if ( direction == 'right' ) {
+			newIndex++;
+		}
+
+		render_manage_nav( id, newIndex );
+		render_manage_season( id, newIndex );
+
+		// console.log(direction);
+		// console.log(index);
+	});
+}
+
+//renders the SEASON panel within an expanded MANAGE item
 function render_manage_season(id, season_index){
 
-	var thisShow = _.first(_.filter(myShows.models, function(model) {
-		return (model.get('show_id') == id);
-	}));
-		var thisBool = _.find(myBools.models, function(item) { return item.get('show_id') == id; });
+	var thisShow = myShows.match(id);
 
-		var episodes = thisShow.get('episodes');
+	var thisBool = myBools.match(id);
+
+	var episodes = thisShow.get('episodes');
 
 	var season_template = _.template( $('#manage-season-template').html() );
 
@@ -165,52 +209,9 @@ function render_manage_season(id, season_index){
   	});
 }
 
-function render_manage_nav(id, season_index){
-	var thisShow = _.first(_.filter(myShows.models, function(model) {
-		return (model.get('show_id') == id);
-	}));
-
-  	var template	= _.template( 
-  		$('#manage-nav-template').html() 
-		);
-
-		var data = {
-			'showid' 	 	: 	id,
-			'season_index' 	: 	season_index,
-			'season_num'	:  	String(season_index+1), 
-			'num_seasons'	: 	thisShow.get('episodes').length
-		}
-
-	$('span#'+id+'.manage-expanded').append(
-		template(data)
-	)
-
-	$('li.nav-row a').unbind();
-
-	$('li.nav-row a#left, li.nav-row a#right').click(function() {
-		$('span#'+id+'.manage-expanded').empty();
-		render_manage_actions( id );
-
-		var direction = $(this).attr('id');
-		var index = $(this).attr('data_index');
-		var newIndex = index;
-
-		if ( direction == 'left' ){
-			newIndex--;
-		} else if ( direction == 'right' ) {
-			newIndex++;
-		}
-
-		render_manage_nav( id, newIndex );
-		render_manage_season( id, newIndex );
-
-		// console.log(direction);
-		// console.log(index);
-	});
-}
-
-// generalized lens rendering function
-// if showid is undefined, runs render_lenses(showid) on ALL models 
+//renders lenses in MANAGE item for a particular SEASON and SHOWID
+//	if SEASON is undefined, runs on all seasons within a show
+//	if SHOWID is undefined, runs on all shows
 function render_lenses(showid, season) {
 	// console.log('render_lenses('+showid+') called');
 
@@ -222,9 +223,7 @@ function render_lenses(showid, season) {
 		});
 	} else if (_.isUndefined(season)) {
 		// console.log(showid);
-		var show = _.first(_.filter(myBools.models, function(model) {
-			return (model.get('show_id') == showid);
-		}))
+		var show = myBools.match(showid);
 		
 		if(_.isUndefined(show)){ return; }
 		
@@ -235,9 +234,7 @@ function render_lenses(showid, season) {
 		}
 	} else {
 		// console.log(showid + ' ' + season);
-		var show = _.first(_.filter(myBools.models, function(model) {
-			return (model.get('show_id') == showid);
-		}));
+		var show = myBools.match(showid);
 
 		if(_.isUndefined(show)){ return; }
 		
@@ -268,24 +265,19 @@ function render_lenses(showid, season) {
 	}
 }
 
-//deletes a show
-function manage_delete(showid, name) {
+//deletes a show from MYBOOLS and MYSHOWS
+function manage_delete(showid) {
 	console.log('manage_delete() called');
-	var len = myBools.length;
-	boolResult = _.first(myBools.filter(function(model) {
-		return model.get('show_id') == showid;
-	}));
 
-	showResult = _.first(myShows.filter(function(model) {
-		return model.get('show_id') == showid;
-	}));
+	boolResult = myBools.match(showid);
 
-	make_toast('Deleted ' + name); //let em know
-		
-	console.log(myShows.length);
+	showResult = myShows.match(showid);
+
+	make_toast('Deleted ' + showResult.get('name')); //let em know
+
 	boolResult.destroy(); //destroy bool
 	myShows.remove(showResult); //remove show
-	console.log(myShows.length);
+
 	if(myShows.length==0){
 		fix_state('manage', 'empty');
 	} else {
@@ -296,72 +288,58 @@ function manage_delete(showid, name) {
 	update_queued();
 }
 
-function manage_action(el){
-	var showid 	= el.attr('data-id');
-	var name 	= el.attr('data-name');
-	var action 	= el.attr('id');
+//performs an action on a show, given the 
+function manage_action(showid, name, action){
 	var state = (action=='reset')?false:true;
 
 	//MODEL - backend updating works great
-	if(action=='delete') {
-		manage_delete(showid, name);				
+	if (action=='delete') {
+		manage_delete(showid);				
 	} else if (action=='reset') {
 		manage_set_all(showid, name, state);
-		_.each($('span.manage-expanded li.eps-row a.episode'), function(i) {
-
-		});
 	} else if (action=='set') {
 		manage_set_all(showid, name, state);
 	}
-	//don't re-render - just toggleSeen for all eps in shw
-	//for each .episode
 
-	//BUG BUG BUG BUG BUG BUG BUG BUG BUG
+	update_queued();
+	update_queued(showid);
+	render_lenses(showid);
+}
+
+//sets all seen / queued for a show
+function manage_set_all(showid, name, state) {
+	console.log('manage_set_all() called');
+
+	thisBools = myBools.match(showid);
+
+	array = myShows.match(showid).get('episodes');
+
+	var tempArray = thisBools.get('array');
+	_.each(tempArray, function(i_item, i_index) {
+		_.each(i_item, function(j_item, j_index) {
+			var hasAired = grok_airdate(array[i_index][j_index].airdate);
+			console.log(hasAired);
+			if(!hasAired){
+				tempArray[i_index][j_index] = false;
+			} else {
+				tempArray[i_index][j_index] = state;
+			}
+		});
+	});
+
+	if(state) {
+		make_toast('Marked all episodes of ' + name + ' as seen.');
+	} else {
+		make_toast('Queued all episodes of ' + name + '.');
+	}
+
+	thisBools.set('array', tempArray);
+	thisBools.save();
+
 	_.each($('.manage-expanded li.eps-row a.episode'), function(i) {
 		if($(i).attr('data-seen')!=String(state)){
 			toggle_el($(i));				
 		}
 	});
-
-	update_queued();
-	update_queued(showid);
-
-	render_lenses(showid);
-}
-
-//sets all seen / queued for a show
-function manage_set_all(showid, name, allSeen) {
-	console.log('manage_set_all() called');
-
-	thisBools = _.first(myBools.filter(function(model) {
-			return model.get('show_id') == showid;
-		}));
-
-		array = _.first(myShows.filter(function(model) {
-			return model.get('show_id') == showid;
-		})).get('episodes');
-
-		var tempArray = thisBools.get('array');
-		_.each(tempArray, function(i_item, i_index) {
-			_.each(i_item, function(j_item, j_index) {
-				var hasAired = grok_airdate(array[i_index][j_index].airdate);
-				console.log(hasAired);
-				if(!hasAired){
-  				tempArray[i_index][j_index] = false;
-				} else {
-  				tempArray[i_index][j_index] = allSeen;
-				}
-			});
-		});
-
-		if(allSeen) {
-		make_toast('Marked all episodes of ' + name + ' as seen.');
-		} else {
-		make_toast('Queued all episodes of ' + name + '.');
-		}
-	thisBools.set('array', tempArray);
-	thisBools.save();
-
-	update_queued();
 }
 

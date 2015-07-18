@@ -6,7 +6,7 @@
 //
 // TELEVIS.IO ONBOARDING FUNCTIONS
 
-//switch onboarding views in dom
+//switches onboarding stages
 function onboarding_switch(stage) {
 	console.log('onboarding_switch() called');
 
