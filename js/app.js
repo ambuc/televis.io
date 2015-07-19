@@ -23,9 +23,8 @@
 Parse.$ = jQuery; //reassign jQuery, god knows why
 Parse.initialize("CI4kTSt4LME3DQopwCpnh4E4yEFwr0fEwYpAeNuF", "kh8MdcK8IcQnTMXzCmUvogxdREWP7eyRv4VGQoVG"); //initialize with login keys
 
-var xhr; 					// one xhr request at a time, frien
 var currentTab = ''; 		// which tab we're on
-var defaultTab = 'queue';  // which tab to open on
+var defaultTab = 'manage';  // which tab to open on
 var queueLimit = 3; 		// num of eps per show in q item
 var comparatorType = 'date';
 
@@ -227,7 +226,7 @@ function tab_recolor(currentTab, desiredTab){
 //only necessary for tabs with more than one stage - not queue or manage
 function tab_init(desiredTab) {
 	if (desiredTab == 'add') {
-		add_ask();
+		add_cancel();
 		//needs to be reset
 	} else if (desiredTab == 'onboarding') {
 		onboarding_init();

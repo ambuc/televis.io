@@ -11,7 +11,6 @@ function add_cancel() {
 	console.log('add_cancel() called');
 
 	add_switch('a');
-	xhr.abort();
 	// make_toast("Query aborted.");
 }
 
@@ -44,6 +43,7 @@ function add_ask() {
 	console.log('add_ask() called');
 
 	add_switch('a');
+
 	$("section#add input#input").keyup(function(event) {
 		if(event.keyCode == 13) { 
 			var title = $('section#add input#input').val();

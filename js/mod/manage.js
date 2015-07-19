@@ -73,7 +73,25 @@ function render_manage() {
 	//update lenses at least once per render
 	_.defer(render_lenses);
 
+	if (isEmpty($('div#manage_settings'))){
+		console.log('rendering');
+		manage_settings_render();
+	}
 }
+
+function manage_settings_render(){
+  	var comparatorsTemplate = _.template( $('#comparators-template').html() );
+
+	$("section#manage div#manage_settings").empty().append( comparatorsTemplate()  );
+
+	$('div#manage_settings a.sortby').click(function(){
+		$('div#manage_settings a.sortby').addClass('white grey-text');
+		$('div#manage_settings a.sortby').removeClass('grey white-text');
+		$(this).toggleClass('white grey white-text grey-text');
+		shows_sort($(this).attr('id'), 'manage');
+	});
+}
+
 
 //renders the ACTIONS panel within an expanded MANAGE item
 function render_manage_actions(id){

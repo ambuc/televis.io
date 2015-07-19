@@ -9,7 +9,7 @@
 //given a $shortname to search for, we query ketchup.php.
 //with the $data, we print the CHOOSE panel.
 function search_shortname(shortname, string){
-	xhr = $.ajax({
+	$.ajax({
 		url: 'http://www.jbuckland.com/ketchup.php?func=search&query=' + shortname, 
 		// url: 'http://services.tvrage.com/feeds/search.php?show=' + shortname, 
 		dataType: "json",

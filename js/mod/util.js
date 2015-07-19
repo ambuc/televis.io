@@ -167,3 +167,8 @@ function clean_data(data) {
 	}
 	return result;
 }
+
+//returns bool if the element is empty or what
+function isEmpty( el ){
+	return !$.trim(el.html())
+}

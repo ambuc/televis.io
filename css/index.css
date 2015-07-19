@@ -9,7 +9,8 @@
  **
  **/
 
-main{
+html{
+	min-width: 250px !important;
 }
 
 /*universal*/
@@ -109,16 +110,6 @@ main{
 	section#queue a.watch i{
 		padding-top:3px;
 	}
-	section div#queue_settings{
-		margin-top : 10px;
-	}
-	section div#queue_settings a{
-		display:block;
-		border-radius:10px;
-	}
-	section div#queue_settings a:hover{
-		box-shadow: none;
-	}
 	section#queue ul.collection{
 		border : none;
 	}
@@ -190,7 +181,17 @@ main{
 		margin-left : 8px;
 	}
 	
-
+/*settings*/
+	section div#queue_settings, section div#manage_settings{
+		margin-top : 10px;
+	}
+	section div#queue_settings a, section div#manage_settings a{
+		display:block;
+		border-radius:10px;
+	}
+	section div#queue_settings a:hover, section div#manage_settings a:hover{
+		box-shadow: none;
+	}
 
 
 

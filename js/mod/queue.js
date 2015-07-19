@@ -40,21 +40,37 @@ function queue_render() {
 		queue_watch($(this));
 	});
 
+	if (isEmpty($('div#queue_settings'))){
+		console.log('rendering');
+		queue_settings_render();
+	}
+}
+
+
+
+function queue_settings_render(){
+  	var comparatorsTemplate = _.template( $('#comparators-template').html() );
+
+	$("section#queue div#queue_settings").empty().append( comparatorsTemplate()  );
+
 	$('div#queue_settings a.sortby').click(function(){
 		$('div#queue_settings a.sortby').addClass('white grey-text');
 		$('div#queue_settings a.sortby').removeClass('grey white-text');
 		$(this).toggleClass('white grey white-text grey-text');
-		queue_sort($(this).attr('id'));
+		shows_sort($(this).attr('id'), 'queue');
 	});
-
 }
 
-function queue_sort(type){
+function shows_sort(type, panel){
 	if(type!=comparatorType){
 		myShows.swapComparator(type);
 		myShows.sort();
 		// console.log(myShows.models);
-		queue_render();
+		if(panel=='queue'){
+			queue_render();			
+		} else if (panel=='manage'){
+			render_manage();			
+		}
 		console.log(type);
 		comparatorType = type;
 	} else {
