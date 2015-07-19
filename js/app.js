@@ -2,9 +2,8 @@
 // 	-	BUGS
 // 		-	EMPTY panel for when there's a new season but no eps in it
 // 		-	DUPLICATES when adding a show twice in succession
-		// - CANNOT ADD SHOWS IF JUST LOGGED IN FOR THE FIRST TIME
+// 		-	doesn't yet AUTO-UPDATE shows !!!
 // 	-	FEATURES
-// 		-	AUTO-UPDATE shows !!! !!!
 // 		-	SUPPORT larger data sets
 // 		-	ADD specific episodes
 // 		-	ADD calendar
@@ -40,13 +39,14 @@ var Bools = Parse.Object.extend("Bools",{
 		'show_id'	: 	null,
 		'seasons'	: 	null,
 	    'array'		: 	null,
-	    user		:   Parse.User.current()
+	    'user'		:   Parse.User.current()
 	    // ACL:    new Parse.ACL(Parse.User.current())
 	}, 
 	initialize: function() {
 		//on initialization, create an array [[],[],[]] of length $seasons
 		this.set({
-			array: create_array( this.get('seasons') , 0 )
+			'array' : create_array( this.get('seasons') , 0 ),
+			'user'  : Parse.User.current()
 		});
 	}
 });
@@ -170,129 +170,84 @@ var tabColors = {
 
 //tab stuff
 
-	//does / doesn't display tabs
-	function display_tabs(bool) {
-		if(bool) {
-			$('.tabsblock a').show();
-		} else {
-			$('.tabsblock a').hide();
-		}
+//does / doesn't display tabs
+function display_tabs(bool) {
+	if(bool) {
+		$('.tabsblock a').show();
+	} else {
+		$('.tabsblock a').hide();
 	}
+}
 
-	//does / doesn't bind tab behavior
-	function bind_tabs(bool) {
-		if(bool) {
-			$('.tabsblock a').click(function() {
-				tab_goTo($(this).attr('id'));
-			});			
-		} else {
-			$('.tabsblock a').unbind();
-		}
+//does / doesn't bind tab behavior
+function bind_tabs(bool) {
+	if(bool) {
+		$('.tabsblock a').click(function() {
+			tab_goTo($(this).attr('id'));
+		});			
+	} else {
+		$('.tabsblock a').unbind();
 	}
+}
 
-	//navigates to a tab, and changes the .navtabs appearance to match.
-	function tab_goTo(desiredTab) {
-		console.log('tab_goTo() ' + desiredTab);
+//navigates to a tab, and changes the .navtabs appearance to match.
+function tab_goTo(desiredTab) {
+	console.log('tab_goTo() ' + desiredTab);
 
-		if (desiredTab == currentTab) {
-			return;
-		} else {
-			$('main section').hide();
-			$('section#'+desiredTab).show();
-			bg_recolor(desiredTab);
-			tab_recolor(currentTab, desiredTab);
-			tab_init(desiredTab);
-			check_stacks(desiredTab);
-			currentTab = desiredTab;
-		}
+	if (desiredTab == currentTab) {
+		return;
+	} else {
+		$('main section').hide();
+		$('section#'+desiredTab).show();
+		bg_recolor(desiredTab);
+		tab_recolor(currentTab, desiredTab);
+		tab_init(desiredTab);
+		check_stacks(desiredTab);
+		currentTab = desiredTab;
 	}
+}
 
-	//recolors background to match selected tab
-	function bg_recolor(desiredTab){
-		// $('main').css('background', 'linear-gradient('+tabColors[desiredTab]+', #b2ebf2)');
-		$('main').css("background-color", 'white');
-		// console.log( $('section#'+desiredTab+" ul.collection") );
-		// $('section#'+desiredTab+" ul.collection").css('color', tabColors[desiredTab]);
-	}
+//recolors background to match selected tab
+function bg_recolor(desiredTab){
+	// $('main').css('background', 'linear-gradient('+tabColors[desiredTab]+', #b2ebf2)');
+	$('main').css("background-color", 'white');
+	// console.log( $('section#'+desiredTab+" ul.collection") );
+	// $('section#'+desiredTab+" ul.collection").css('color', tabColors[desiredTab]);
+}
 
-	function tab_recolor(currentTab, desiredTab){
-		if(currentTab!=""){
-			$('header li #'+currentTab).parent().removeClass('red darken-2');		
-		}
-		if(desiredTab!=""){
-			$('header li #'+desiredTab).parent().addClass('red darken-2');
-		}
+function tab_recolor(currentTab, desiredTab){
+	if(currentTab!=""){
+		$('header li #'+currentTab).parent().removeClass('red darken-2');		
 	}
+	if(desiredTab!=""){
+		$('header li #'+desiredTab).parent().addClass('red darken-2');
+	}
+}
 
-	//only necessary for tabs with more than one stage - not queue or manage
-	function tab_init(desiredTab) {
-		if (desiredTab == 'add') {
-			add_ask();
-			//needs to be reset
-		} else if (desiredTab == 'onboarding') {
-			onboarding_init();
-			//needs to be reset
-		}
+//only necessary for tabs with more than one stage - not queue or manage
+function tab_init(desiredTab) {
+	if (desiredTab == 'add') {
+		add_ask();
+		//needs to be reset
+	} else if (desiredTab == 'onboarding') {
+		onboarding_init();
+		//needs to be reset
 	}
+}
 
 //empties stuff
-	function bind_empties(bool) {
-		if(bool) {
-			$('#manage_empty a#follow').click(function() {
-				tab_goTo('add');
-			});
-			$('#queue_empty a#follow').click(function() {
-				tab_goTo('add');
-			});
-		} else {
+function bind_empties(bool) {
+	if(bool) {
+		$('#manage_empty a#follow').click(function() {
+			tab_goTo('add');
+		});
+		$('#queue_empty a#follow').click(function() {
+			tab_goTo('add');
+		});
+	} else {
 
-		}
 	}
-
-//bools fetcher
-
-//resets myBools and myShows
-//for the current user, 
-//  finds their BOOl models in the database
-//  and adds them to myBools
-//  and fetches each relevant show
-//  and adds them to myShows
-function fetch_bools() {
-
-	console.log('fetch_bools() called');
-
-	var boolsQuery  = new Parse.Query( Parse.Object.extend("Bools") );
-	boolsQuery.equalTo("user", Parse.User.current());
-	//async
-	boolsQuery.find({
-		success: function(results) {
-			myBools.reset();
-			myShows.reset();
-			_.each(results, function(result) {
-				myBools.add( result );
-				fetch_show( result.get('show_id') );
-			});
-			check_stacks(currentTab);
-		}
-	});
 }
-
-// for a show of $id, finds the SHOW model
-//   and adds it to myShows
-function fetch_show(id) {
-	console.log('fetch_show() called');
-
-	var showsQuery  = new Parse.Query( Parse.Object.extend("Show") );
-	showsQuery.equalTo("show_id", parseInt(id));
-	//async
-	showsQuery.find({
-		success: function(results) {
-			myShows.add( _.first(results) );
-			check_stacks(currentTab);
-		}
-	});
-}
-
 
 // given global myBools and myShows STACKS,
 //   updates the queued total
@@ -370,7 +325,7 @@ function fix_state(tab, state) {
 
 //toggles an episode's element block
 function toggle_el(el) {
-	el.toggleClass('green lighten-2');
+	el.toggleClass('lighten-2');
 	// el.toggleClass('btn-flat');
 
 	if( el.children('i').html()=='check_box' ) {

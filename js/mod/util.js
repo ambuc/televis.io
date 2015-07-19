@@ -137,3 +137,33 @@ function async(your_function, callback) {
         if (callback) {callback();}
     }, 0);
 }
+
+// takes a $data OBJ and retuns a nicer $result OBJ
+function clean_data(data) {
+	console.log('clean_data() called');
+	console.log(data);
+	// console.log('processing episodes');
+	var result = [];
+	if ( data.totalseasons == 1 ) { //weird case
+		result[0] = [];
+		for (var i = 0; i < data.Episodelist.Season.episode.length; i++) {
+			result[0][i] = {};
+			result[0][i]['airdate'] = data.Episodelist.Season.episode[i].airdate;
+			result[0][i]['epnum'] = data.Episodelist.Season.episode[i].epnum;
+			result[0][i]['seasonnum'] = data.Episodelist.Season.episode[i].seasonnum;
+			result[0][i]['title'] = data.Episodelist.Season.episode[i].title;
+		}
+	} else { //normal case
+		for (var i = 0; i < data.Episodelist.Season.length; i++) {
+			result[i] = [];
+			for (var j = 0; j < data.Episodelist.Season[i].episode.length; j++) {
+				result[i][j] = {};
+				result[i][j]['airdate'] = data.Episodelist.Season[i].episode[j].airdate;
+				result[i][j]['epnum'] = data.Episodelist.Season[i].episode[j].epnum;
+				result[i][j]['seasonnum'] = data.Episodelist.Season[i].episode[j].seasonnum;
+				result[i][j]['title'] = data.Episodelist.Season[i].episode[j].title;
+			}
+		}
+	}
+	return result;
+}
