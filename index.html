@@ -24,7 +24,6 @@
 <!---- -- HEADER -- -- -->
 
     <header>
-
       <div class='navbar-fixed'>
         <nav class=''>
           <div class="nav-wrapper">
@@ -50,6 +49,14 @@
                 <span class='hide-on-med-and-down'>
                   <span id='totalQueued'></span> 
                   <span>Queued</span> 
+                </span>
+              </a> </li>
+
+              <li class=''><a class='waves-effect' id='cal'> 
+                <i class='material-icons hide-on-large-only'>today</i>
+                <i class='material-icons left hide-on-med-and-down'>today</i>
+                <span class='hide-on-med-and-down'>
+                  <span>Cal</span> 
                 </span>
               </a> </li>
 
@@ -127,7 +134,7 @@
           
           <div class='row' id='queue_full'>
             <div class='col m2 s12 right hide-on-small-only'>
-              <div class='row' id='queue_settings'>
+              <div class='row' id='settings'>
               </div>
             </div>
 
@@ -355,10 +362,59 @@
 
 <!--    -- -- MANAGE -- -- -->
 
+        <section id='cal' class='col l12 m12 s12'>
+          <div class='row'>
+            <div class='col s12' id='settings'>
+              <div class='row'>
+                <a class="waves-effect waves-light btn-large btn-flat grey white-text col m6 s12" id='dashboard'>
+                  <i class="material-icons">dashboard</i>
+                </a>
+                <a class="waves-effect waves-light btn-large btn-flat grey white-text col m6 hide-on-small-only" id='month'>
+                  <i class="material-icons">today</i>
+                </a>
+              </div>
+            </div>
+            <div class='col s12' id='canvas'>
+            </div>
+          </div>
+        </section>
+
+        <script type="text/template" id='cal-card-template'>
+          <div class='container col s12 m6 l4'>
+            <div class="card white">
+              <div class="card-content black-text">
+                <span class="card-title black-text"><%=when%></span>
+                <h5><%=name%></h5>
+                <p class='truncate'><%=title%></p>
+              </div>
+            </div>
+          </div>
+        </script>
+
+        <script type="text/template" id='calendar-template'>
+          <table>
+            <thead>
+              <tr>
+                  <th>Sun</th>
+                  <th>Mon</th>
+                  <th>Tue</th>
+                  <th>Wed</th>
+                  <th>Thr</th>
+                  <th>Fri</th>
+                  <th>Sat</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </script>
+
+<!--    -- -- MANAGE -- -- -->
+
         <section id="manage" class="col l10 m12 s12">
           <div class='row'>
             <div class='col s12 m2 right hide-on-small-only'>
-              <div class='row' id='manage_settings'>
+              <div class='row' id='settings'>
               </div>
             </div>
             <div class='col s12 m10'>
@@ -551,6 +607,7 @@
 <script src="js/mod/queue.js"></script>
 <script src="js/mod/manage.js"></script>
 <script src="js/mod/database.js"></script>
+<script src="js/mod/cal.js"></script>
 <script src="js/mod/util.js"></script>
 
 <script src="js/app.js"></script>

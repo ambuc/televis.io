@@ -93,6 +93,33 @@ html{
 		font-size: x-large;
 	}
 
+/*calendar*/
+	section#cal div#canvas table{
+	    table-layout: fixed;
+	}
+	section#cal div#canvas table tr{
+		border-bottom: 1px solid #eee;
+	}
+	section#cal div#canvas table td{
+		vertical-align: top;
+	    text-align: center;
+	}
+	section#cal div#canvas table th{
+		text-align: center;
+	}
+	section#cal div#canvas table td:first-child, section#cal div#canvas table td:last-child{
+		background: rgb(247,247,247);
+	}
+	section#cal div#canvas table td .tr-head{
+		color:lightgrey;
+	}
+	section#cal div#canvas table td .today{
+		color:pink;
+	}
+	section#cal div#canvas table .cal-item{
+		/*background : pink;*/
+		/*padding: 5px;*/
+	}
 
 /*queue*/
 	/*larger queue show names*/
@@ -182,16 +209,17 @@ html{
 	}
 	
 /*settings*/
-	section div#queue_settings, section div#manage_settings{
+	section div#settings{
 		margin-top : 10px;
 	}
-	section div#queue_settings a, section div#manage_settings a{
+	section div#settings a{
 		display:block;
 		border-radius:10px;
 	}
-	section div#queue_settings a:hover, section div#manage_settings a:hover{
+	section div#settings a:hover{
 		box-shadow: none;
 	}
+
 
 
 

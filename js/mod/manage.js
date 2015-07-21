@@ -73,7 +73,7 @@ function render_manage() {
 	//update lenses at least once per render
 	_.defer(render_lenses);
 
-	if (isEmpty($('div#manage_settings'))){
+	if (isEmpty($('section#manage div#settings'))){
 		console.log('rendering');
 		manage_settings_render();
 	}
@@ -82,11 +82,11 @@ function render_manage() {
 function manage_settings_render(){
   	var comparatorsTemplate = _.template( $('#comparators-template').html() );
 
-	$("section#manage div#manage_settings").empty().append( comparatorsTemplate()  );
+	$("section#manage div#settings").empty().append( comparatorsTemplate()  );
 
-	$('div#manage_settings a.sortby').click(function(){
-		$('div#manage_settings a.sortby').addClass('white grey-text');
-		$('div#manage_settings a.sortby').removeClass('grey white-text');
+	$('section#manage div#settings a.sortby').click(function(){
+		$('section#manage div#settings a.sortby').addClass('white grey-text');
+		$('section#manage div#settings a.sortby').removeClass('grey white-text');
 		$(this).toggleClass('white grey white-text grey-text');
 		shows_sort($(this).attr('id'), 'manage');
 	});

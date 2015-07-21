@@ -40,7 +40,7 @@ function queue_render() {
 		queue_watch($(this));
 	});
 
-	if (isEmpty($('div#queue_settings'))){
+	if (isEmpty($(' section#queue div#settings'))){
 		console.log('rendering');
 		queue_settings_render();
 	}
@@ -51,11 +51,11 @@ function queue_render() {
 function queue_settings_render(){
   	var comparatorsTemplate = _.template( $('#comparators-template').html() );
 
-	$("section#queue div#queue_settings").empty().append( comparatorsTemplate()  );
+	$("section#queue div#settings").empty().append( comparatorsTemplate()  );
 
-	$('div#queue_settings a.sortby').click(function(){
-		$('div#queue_settings a.sortby').addClass('white grey-text');
-		$('div#queue_settings a.sortby').removeClass('grey white-text');
+	$('section#queue div#settings a.sortby').click(function(){
+		$('section#queue div#settings a.sortby').addClass('white grey-text');
+		$('section#queue div#settings a.sortby').removeClass('grey white-text');
 		$(this).toggleClass('white grey white-text grey-text');
 		shows_sort($(this).attr('id'), 'queue');
 	});
@@ -182,7 +182,7 @@ function queue_toggle(el){
 
 //expands a queue item
 function queue_expand(el){
-	$('#queue_full li#'+el.attr('id')+" p a.overflow").toggle();
+	$('section#queue #queue_full li#'+el.attr('id')+" p a.overflow").toggle();
 
 	el.children('i').toggleClass('left');
 	el.children('span.text').toggle();

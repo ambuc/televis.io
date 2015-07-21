@@ -24,7 +24,7 @@ Parse.$ = jQuery; //reassign jQuery, god knows why
 Parse.initialize("CI4kTSt4LME3DQopwCpnh4E4yEFwr0fEwYpAeNuF", "kh8MdcK8IcQnTMXzCmUvogxdREWP7eyRv4VGQoVG"); //initialize with login keys
 
 var currentTab = ''; 		// which tab we're on
-var defaultTab = 'manage';  // which tab to open on
+var defaultTab = 'cal';  // which tab to open on
 var queueLimit = 3; 		// num of eps per show in q item
 var comparatorType = 'date';
 
@@ -286,6 +286,8 @@ function check_stacks(desiredTab) {
 			
 			if(desiredTab == 'queue'){
 				queue_render();
+			} else if (desiredTab == 'cal'){
+				cal_render()
 			}
 		} else {
 			console.log('manage is full, queue is empty');
