@@ -7,10 +7,12 @@
 // TELEVIS.IO DATABASE FUNCTIONS
 
 //given a $shortname to search for, we query yql.
+// http://james.padolsey.com/snippets/using-yql-with-jsonp/
+// https://developer.yahoo.com/yql/console/#h=select+*+from+xml+where+url%3D'services.tvrage.com%2Ffeeds%2Fsearch.php%3Fshow%3Dlost'
 //with the $data, we print the CHOOSE panel.
 function search_shortname(shortname, string){
 	$.ajax({
-		url: "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'services.tvrage.com%2Ffeeds%2Fsearch.php%3Fshow%3D"+shortname+"'&format=json&diagnostics=true&callback=", 
+		url: "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D\"services.tvrage.com%2Ffeeds%2Fsearch.php%3Fshow%3D"+encodeURIComponent(shortname)+"\"&format=json&diagnostics=true&callback=", 
 		// url: 'http://services.tvrage.com/feeds/search.php?show=' + shortname, 
 		dataType: "json",
 		type: 'GET',

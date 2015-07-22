@@ -34,11 +34,12 @@ Parse.$ = jQuery; //reassign jQuery, god knows why
 Parse.initialize("CI4kTSt4LME3DQopwCpnh4E4yEFwr0fEwYpAeNuF", "kh8MdcK8IcQnTMXzCmUvogxdREWP7eyRv4VGQoVG"); //initialize with login keys
 
 var currentTab = ''; 		// which tab we're on
-var defaultTab = 'queue';  // which tab to open on
+var defaultTab = 'add';  // which tab to open on
 var queueLimit = 3; 		// num of eps per show in q item
-var comparatorType = 'date';
+var comparatorType = 'date'; //initial default comparator
 
 var _MS_PER_DAY = 1000 * 60 * 60 * 24; //stuff for date handling, from SE
+
 // var today = Date.today();
 var longTime 	= 5000; //for toasts
 var shortTime 	= 3000;	//for toasts
