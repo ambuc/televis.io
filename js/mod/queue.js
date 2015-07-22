@@ -8,7 +8,7 @@
 
 //renders the queue
 function queue_render() {
-	console.log('queue_render() called');
+	// console.log('queue_render() called');
 
 	//check that the rendering is valid
 	if (myBools.length != myShows.length) { return; }
@@ -41,7 +41,7 @@ function queue_render() {
 	});
 
 	if (isEmpty($(' section#queue div#settings'))){
-		console.log('rendering');
+		// console.log('rendering');
 		queue_settings_render();
 	}
 }
@@ -71,7 +71,7 @@ function shows_sort(type, panel){
 		} else if (panel=='manage'){
 			render_manage();			
 		}
-		console.log(type);
+		// console.log(type);
 		comparatorType = type;
 	} else {
 		return;

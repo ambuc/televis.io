@@ -25,45 +25,40 @@
 
     <header>
       <div class='navbar-fixed'>
-        <nav class=''>
+        <nav class='white'>
           <div class="nav-wrapper">
 
             <ul class='left hide-on-large'>
               <li><a class='waves-effect' id='title'> 
-                  <i class='material-icons white-text left'>dvr</i>
-                  <span class='hide-on-small-only white-text'> televis.io</span>
+                  <i class='material-icons black-text left'>dvr</i>
+                  <span class='hide-on-small-only black-text'> televis.io</span>
               </a></li>
             </ul>
             
             <ul class="right tabsblock">
               
               <li class=''><a class='waves-effect' id='add'> 
-                <i class='material-icons hide-on-large-only'>add</i>
-                <i class='material-icons left hide-on-med-and-down'>add</i>
-                <span class='hide-on-med-and-down'>Add</span> 
+                <!-- <i class='black-text material-icons hide-on-large-only'>add</i> -->
+                <i class='red-text material-icons'>add</i>
+                <!-- <span class='black-text hide-on-med-and-down'>Add</span>  -->
               </a></li>
 
               <li class=''><a class='waves-effect' id='queue'> 
-                <i class='material-icons hide-on-large-only'>new_releases</i>
-                <i class='material-icons left hide-on-med-and-down'>new_releases</i>
-                <span class='hide-on-med-and-down'>
-                  <span id='totalQueued'></span> 
-                  <span>Queued</span> 
-                </span>
+                <!-- <i class='black-text material-icons hide-on-large-only'>new_releases</i> -->
+                <i class='amber-text material-icons'>new_releases</i>
+                <!-- <span class='black-text' id='totalQueued'> </span> -->
               </a> </li>
 
               <li class=''><a class='waves-effect' id='cal'> 
-                <i class='material-icons hide-on-large-only'>today</i>
-                <i class='material-icons left hide-on-med-and-down'>today</i>
-                <span class='hide-on-med-and-down'>
-                  <span>Cal</span> 
-                </span>
+                <!-- <i class='black-text material-icons hide-on-large-only'>today</i> -->
+                <i class='blue-text material-icons'>today</i>
+                <!-- <span class='black-text hide-on-med-and-down'> <span>Calendar</span> </span> -->
               </a> </li>
 
               <li class=''><a class='waves-effect' id='manage'> 
-                <i class='material-icons hide-on-large-only'>settings</i>
-                <i class='material-icons left hide-on-med-and-down'>settings</i>
-                <span class='hide-on-med-and-down'>Manage</span> 
+                <!-- <i class='black-text material-icons hide-on-large-only'>settings</i> -->
+                <i class='green-text material-icons'>settings</i>
+                <!-- <span class='black-text hide-on-med-and-down'>Manage</span>  -->
               </a></li>
 
             </ul>
@@ -131,7 +126,7 @@
 <!--    -- -- QUEUE -- -- -->
 
         <section id="queue" class="queue col l10 m12 s12">
-          
+          <h1><small>Queue</small></h1>
           <div class='row' id='queue_full'>
             <div class='col m2 s12 right hide-on-small-only'>
               <div class='row' id='settings'>
@@ -332,11 +327,11 @@
                 <div class='card-action'>
                   <a class='waves-effect btn-large green white-text' id='add'>
                     <i class="material-icons left">search</i>
-                    <span id='AddShowButtonText'>Search</span>
+                    <span>Search</span>
                   </a>
                   <a class='waves-effect btn-large red white-text' id='cancel'>
                     <i class="material-icons left">cancel</i>
-                    <span id='AddShowButtonText'>Cancel</span>
+                    <span>Cancel</span>
                   </a>
                 </div> <!-- card-action -->
 
@@ -581,6 +576,7 @@
           <div class='col s12' id='writtenwith'>
             Data from the <a href="http://www.tvrage.com/">TVRage API</a>.
             Built with <a href="http://parse.com">Parse</a> 
+            + <a href="https://developer.yahoo.com/yql">YQL</a> 
             + <a href="backbonejs.org">Backbone.js</a> 
             + <a href="http://underscorejs.org">Underscore.js</a> 
             + <a href="https://code.jquery.com/">jQuery</a> 

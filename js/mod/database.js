@@ -6,16 +6,17 @@
 //
 // TELEVIS.IO DATABASE FUNCTIONS
 
-//given a $shortname to search for, we query ketchup.php.
+//given a $shortname to search for, we query yql.
 //with the $data, we print the CHOOSE panel.
 function search_shortname(shortname, string){
 	$.ajax({
-		url: 'http://www.jbuckland.com/ketchup.php?func=search&query=' + shortname, 
+		url: "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'services.tvrage.com%2Ffeeds%2Fsearch.php%3Fshow%3D"+shortname+"'&format=json&diagnostics=true&callback=", 
 		// url: 'http://services.tvrage.com/feeds/search.php?show=' + shortname, 
 		dataType: "json",
 		type: 'GET',
 		success: function(data) {
-			// console.log(data);
+			console.log(data.query.results.Results.show);
+			data = data.query.results.Results.show;
 			if (data == false) { //if nothing happens,
 				add_switch('a'); //return to ASK screen
 				make_toast('Something\'s wrong with the database.');
@@ -27,8 +28,8 @@ function search_shortname(shortname, string){
 				data = wrap_data(data); //wrap the data in an array,
 				add_choose(string, data); //and push the search results to it
 				//let us know how many results were found
-				if(data.show.length) { 
-					make_toast(data.show.length + ' Results Found');
+				if(data.length) { 
+					make_toast(data.length + ' Results Found');
 				} else {
 					make_toast('1 Result Found');						
 				}
@@ -44,7 +45,7 @@ function search_shortname(shortname, string){
 //	if it doesn't,
 //		create it and fetch its eps 
 function try_show(showObj, seen) {
-	console.log('try_show() called');
+	// console.log('try_show() called');
 
 	var query = new Parse.Query(Parse.Object.extend("Show"));
 	query.equalTo("show_id", parseInt(showObj.showid));
@@ -94,15 +95,17 @@ function try_show(showObj, seen) {
 // 	  and .save() them to the $showModel.
 //	then create a BOOLS of the show.
 function fetch_eps(showModel, seen) {
-	console.log('fetch_eps() called');
+	// console.log('fetch_eps() called');
 
 	// console.log('getting episodes by model');
 	$.ajax({
-		url: 'http://www.jbuckland.com/ketchup.php?func=show&query=' + showModel.get('show_id'), 
+		url: "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'services.tvrage.com%2Ffeeds%2Fepisode_list.php%3Fsid%3D"+showModel.get('show_id')+"'&format=json&diagnostics=true&callback=", 
 		// url: 'http://services.tvrage.com/feeds/episode_list.php?sid='+showModel.get('show_id'),
 		dataType: "json",
 		type: 'GET',
 		success: function(data) {
+			console.log(data);
+			data = data.query.results.Show;
 			showModel.set('episodes', clean_data(data));
 			showModel.save();
 			try_bools(showModel, seen);
@@ -183,7 +186,7 @@ function try_bools(showModel, seen) {
 //  and adds them to myShows
 function fetch_bools() {
 
-	console.log('fetch_bools() called');
+	// console.log('fetch_bools() called');
 
 	var boolsQuery  = new Parse.Query( Parse.Object.extend("Bools") );
 	boolsQuery.equalTo("user", Parse.User.current());
@@ -204,7 +207,7 @@ function fetch_bools() {
 // for a show of $id, finds the SHOW model
 //   and adds it to myShows
 function fetch_show(id) {
-	console.log('fetch_show() called');
+	// console.log('fetch_show() called');
 
 	var showsQuery  = new Parse.Query( Parse.Object.extend("Show") );
 	showsQuery.equalTo("show_id", parseInt(id));
@@ -233,7 +236,7 @@ function check_shows(){
 					&& status != "Canceled"
 					&& status != "Canceled/Ended"	
 				) {
-					console.log('   ' + result.get('name') + ' //' + result.get('status') + '// needs updating');
+					// console.log('   ' + result.get('name') + ' //' + result.get('status') + '// needs updating');
 				}
 
 			});
@@ -246,10 +249,12 @@ function check_shows(){
 
 //sometimes data.show is an object (one result), and sometimes it's an array (multiple results). wrap_data(data) puts it in an array all the time, for simpler printing
 function wrap_data(data){
-	if(!_.isArray(data['show'])) {
-		var tempdata = data['show'];
-		data['show'] = new Array();
-		data['show'].push(tempdata);
+	// console.log(data);
+	if(!_.isArray(data)) {
+		var tempdata = data;
+		data = new Array();
+		data.push(tempdata);
 	}
+	// console.log(data);
 	return data;
 }

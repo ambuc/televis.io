@@ -140,8 +140,8 @@ function async(your_function, callback) {
 
 // takes a $data OBJ and retuns a nicer $result OBJ
 function clean_data(data) {
-	console.log('clean_data() called');
-	console.log(data);
+	// console.log('clean_data() called');
+	// console.log(data);
 	// console.log('processing episodes');
 	var result = [];
 	if ( data.totalseasons == 1 ) { //weird case

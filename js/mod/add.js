@@ -8,7 +8,7 @@
 
 //cancel the ADD process --> return to $a
 function add_cancel() {
-	console.log('add_cancel() called');
+	// console.log('add_cancel() called');
 
 	add_switch('a');
 	// make_toast("Query aborted.");
@@ -18,7 +18,7 @@ function add_cancel() {
 //essentially the same as fix_state('add', 'stage') 
 //  but, yknow, whatever
 function add_switch(stage) {
-	console.log('add_switch() called');
+	// console.log('add_switch() called');
 
 	$('section#add .card-content').hide();
 	$('section#add .card-action a').hide();
@@ -40,7 +40,7 @@ function add_switch(stage) {
 
 //ask what the show is called
 function add_ask() {
-	console.log('add_ask() called');
+	// console.log('add_ask() called');
 
 	add_switch('a');
 
@@ -52,6 +52,7 @@ function add_ask() {
 	});
 
 	$("section#add .card-action a#add").click(function(event) {
+		// console.log('adding');
 		var title = $('section#add input#input').val();
 		add_bring(title);
 	});
@@ -59,7 +60,7 @@ function add_ask() {
 
 //bring the search results
 function add_bring(string) {
-	console.log('add_bring() called');
+	// console.log('add_bring() called');
 
 	add_switch('b');
 	// console.log(string);
@@ -80,7 +81,7 @@ function add_bring(string) {
 
 //choose a show from the results
 function add_choose(string, data) {
-	console.log('add_choose() called');
+	// console.log('add_choose() called');
 
 	//if there's only one search result, wrap it in an array
 	
@@ -88,20 +89,19 @@ function add_choose(string, data) {
   		$('#search-results-template').html()
 	);
 
-  	var templateData = { results: data.show };
-
+  	var templateData = { results: data };
 	$("#add-content-c span").html( template(templateData) );
 
 	$("#add-content-c .collection a").click(function() {
 		var id = $(this).attr('id');
-		var show_obj = _.findWhere(data.show, {showid: id});
+		var show_obj = _.findWhere(data, {showid: id});
 		add_determine(show_obj);
 	});
 }
 
 //determine if you've seen it or not
 function add_determine(show_obj) {
-	console.log('add_determine() called');
+	// console.log('add_determine() called');
 	var id = show_obj.showid;
 	var s = myBools.query(show_obj.showid);
 
@@ -131,12 +131,12 @@ function add_determine(show_obj) {
 
 //exactly how far thru the show?
 function add_exactly(show_obj) {
-	console.log('add_exactly() called');
+	// console.log('add_exactly() called');
 }
 
 //finding episodes
 function add_finding(show_obj) {
-	console.log('add_finding() called');
+	// console.log('add_finding() called');
 
 	add_switch('f');
 	$('#add-content-f h5 b').text(show_obj['name']);
@@ -144,7 +144,7 @@ function add_finding(show_obj) {
 
 //great, it worked
 function add_great(name) {
-	console.log('add_great() called');
+	// console.log('add_great() called');
 	add_switch('g');
 	$('#add-content-g h5 b').text(name);
 	setTimeout(function() {

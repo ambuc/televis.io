@@ -5,7 +5,7 @@ function cal_render(){
 }
 
 var cal_bind = function () {
-	console.log('switch');
+	// console.log('switch');
 	$('section#cal div#settings a').addClass('white grey-text');
 	$('section#cal div#settings a').removeClass('grey white-text');
 	$(this).toggleClass('white grey white-text grey-text');

@@ -87,7 +87,7 @@ html{
 
 /*navbar*/
 	header .navbar, header nav, header.nav-wrapper{
-		/*box-shadow: none;*/
+		box-shadow: none;
 	}
 	header li a#title span{
 		font-size: x-large;
@@ -167,6 +167,9 @@ html{
 	section#add ul#search-results{
 		overflow-y: scroll;
 		max-height:300px;
+	}
+	section#add .card{
+		box-shadow: none;
 	}
 
 /*section#manage*/

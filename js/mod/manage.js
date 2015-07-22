@@ -9,7 +9,7 @@
 //renders the MANAGE block
 function render_manage() {
 	// console.log(myBools);
-	console.log('render_manage() called');
+	// console.log('render_manage() called');
 
 	//check that rendering is valid
 	if (myBools.length != myShows.length) { return; }
@@ -74,7 +74,7 @@ function render_manage() {
 	_.defer(render_lenses);
 
 	if (isEmpty($('section#manage div#settings'))){
-		console.log('rendering');
+		// console.log('rendering');
 		manage_settings_render();
 	}
 }
@@ -290,7 +290,7 @@ function render_lens(showid, season, len){
 
 //deletes a show from MYBOOLS and MYSHOWS
 function manage_delete(showid) {
-	console.log('manage_delete() called');
+	// console.log('manage_delete() called');
 
 	boolResult = myBools.match(showid);
 
@@ -331,7 +331,7 @@ function manage_action(showid, name, action){
 
 //sets all seen / queued for a show
 function manage_set_all(showid, name, state) {
-	console.log('manage_set_all() called');
+	// console.log('manage_set_all() called');
 
 	thisBools = myBools.match(showid);
 
@@ -341,7 +341,7 @@ function manage_set_all(showid, name, state) {
 	_.each(tempArray, function(i_item, i_index) {
 		_.each(i_item, function(j_item, j_index) {
 			var hasAired = grok_airdate(array[i_index][j_index].airdate);
-			console.log(hasAired);
+			// console.log(hasAired);
 			if(!hasAired){
 				tempArray[i_index][j_index] = false;
 			} else {

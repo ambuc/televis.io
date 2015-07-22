@@ -6,7 +6,6 @@
 // 	-	FEATURES
 // 		-	SUPPORT larger data sets
 // 		-	ADD specific episodes
-// 		-	ADD calendar
 // 	-	OPTIMIZATIONS
 // 		-	CALCULATE_QUEUED should be simple array not _.underscore
 // 		-	FETCH_EPS need not trigger for shows in parse database
@@ -20,11 +19,22 @@
 //
 // APP
 
+
+// $.ajax({
+// 	url: "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'services.tvrage.com%2Ffeeds%2Fsearch.php%3Fshow%3Dlost'&format=json&diagnostics=true&callback=",
+// 	dataType: "json",
+// 	type: 'GET',
+// 	success: function(data) {
+// 		console.log(data.query.results);
+// 	}
+// });
+
+
 Parse.$ = jQuery; //reassign jQuery, god knows why
 Parse.initialize("CI4kTSt4LME3DQopwCpnh4E4yEFwr0fEwYpAeNuF", "kh8MdcK8IcQnTMXzCmUvogxdREWP7eyRv4VGQoVG"); //initialize with login keys
 
 var currentTab = ''; 		// which tab we're on
-var defaultTab = 'cal';  // which tab to open on
+var defaultTab = 'queue';  // which tab to open on
 var queueLimit = 3; 		// num of eps per show in q item
 var comparatorType = 'date';
 
@@ -68,7 +78,7 @@ var Show = Parse.Object.extend("Show",{
 var BoolStack = Parse.Collection.extend({
 	model: Bools,
 	initialize : function() {
-		console.log('BoolStack initialized');
+		// console.log('BoolStack initialized');
 	},
 	match: function(id){
 		return _.first(this.query(id));
@@ -93,7 +103,7 @@ var ShowStack = Parse.Collection.extend({
 		return -calculate_mostRecentAirdate(model.get('show_id'));
 	},
 	initialize : function() {
-		console.log('ShowStack initialized');
+		// console.log('ShowStack initialized');
 	},
 	match: function(id){
 		return _.first(this.query(id));
@@ -129,9 +139,10 @@ var tabStates = {
 }
 var tabColors = {
 	'default' 	: 'white',
-	'add' 		: '#4dd0e1',
-	'queue' 	: '#00bcd4',
-	'manage' 	: '#0097a7',
+	'add' 		: 'red',
+	'queue' 	: 'amber',
+	'cal' 		: 'blue',
+	'manage' 	: 'green'
 }
 
 
@@ -191,7 +202,7 @@ function bind_tabs(bool) {
 
 //navigates to a tab, and changes the .navtabs appearance to match.
 function tab_goTo(desiredTab) {
-	console.log('tab_goTo() ' + desiredTab);
+	// console.log('tab_goTo() ' + desiredTab);
 
 	if (desiredTab == currentTab) {
 		return;
@@ -208,25 +219,25 @@ function tab_goTo(desiredTab) {
 
 //recolors background to match selected tab
 function bg_recolor(desiredTab){
-	// $('main').css('background', 'linear-gradient('+tabColors[desiredTab]+', #b2ebf2)');
 	$('main').css("background-color", 'white');
-	// console.log( $('section#'+desiredTab+" ul.collection") );
-	// $('section#'+desiredTab+" ul.collection").css('color', tabColors[desiredTab]);
 }
 
 function tab_recolor(currentTab, desiredTab){
+	console.log(tabColors[currentTab]);
 	if(currentTab!=""){
-		$('header li #'+currentTab).parent().removeClass('red darken-2');		
+		$('header li #'+currentTab).parent().removeClass(tabColors[currentTab]);		
+		$('header li #'+currentTab+' i').removeClass('white-text');		
 	}
 	if(desiredTab!=""){
-		$('header li #'+desiredTab).parent().addClass('red darken-2');
+		$('header li #'+desiredTab).parent().addClass(tabColors[desiredTab]);
+		$('header li #'+desiredTab+' i').addClass('white-text');
 	}
 }
 
 //only necessary for tabs with more than one stage - not queue or manage
 function tab_init(desiredTab) {
 	if (desiredTab == 'add') {
-		add_cancel();
+		add_ask();
 		//needs to be reset
 	} else if (desiredTab == 'onboarding') {
 		onboarding_init();
@@ -280,7 +291,7 @@ function check_stacks(desiredTab) {
 
 		if(areQueued) {
 			//manage is full, queue is full
-			console.log('manage is full, queue is full');
+			// console.log('manage is full, queue is full');
 			fix_state('manage', 'full');
 			fix_state('queue',  'full');
 			
@@ -290,7 +301,7 @@ function check_stacks(desiredTab) {
 				cal_render()
 			}
 		} else {
-			console.log('manage is full, queue is empty');
+			// console.log('manage is full, queue is empty');
 			fix_state('manage', 'full');
 			fix_state('queue',  'empty');
 		}
@@ -300,7 +311,7 @@ function check_stacks(desiredTab) {
 		}
 	} else {
 		//manage is empty, queue is empty
-		console.log('manage is empty, queue is empty');
+		// console.log('manage is empty, queue is empty');
 		fix_state('manage', 'empty');
 		fix_state('queue',  'empty');
 	}
@@ -312,7 +323,7 @@ function fix_state(tab, state) {
 	//if already in that state, save the jQuery expense
 	if(tabStates[tab]==state){return;}
 
-	console.log('tab ' + tab + ' state ' + state);
+	// console.log('tab ' + tab + ' state ' + state);
 	//hide all other tab states
 	$('#'+tab+'_full').hide();
 	$('#'+tab+'_empty').hide();
@@ -340,7 +351,7 @@ function toggle_el(el) {
 
 //toggles seen/unseen in the global myBools model
 function toggle_seen(showid, season, episode) {
-	console.log('toggle_seen() called');
+	// console.log('toggle_seen() called');
 
 		result = myBools.match(showid);
 		arrayCopy = result.get('array');
