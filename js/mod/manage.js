@@ -47,42 +47,51 @@ function render_manage() {
 
 	});
 
-	//expand click behaviors
-	var isExpanded = false;
 
 	//expand div on a#expand click	
 	$('section#manage a.expand').click(function() {
-		if(isExpanded) { 
-			$(this).children('i').html('expand_more');
-			isExpanded = false;
-			var id = $(this).attr('id');
-			$("section#manage span#"+id+".manage-expanded").empty();
-		} else {
-			$(this).children('i').html('expand_less');
-			isExpanded = true;				
-
-			var id = $(this).attr('id');
-			var cinit = calculate_whereFrom(id);
-
-			render_manage_actions(id);
-			render_manage_nav( id, cinit );
-			render_manage_season( id, cinit );
-		}
+		manage_click($(this));
 	});
 
 	//update lenses at least once per render
 	_.defer(render_lenses);
 
 	if (isEmpty($('section#manage div#settings'))){
-		// console.log('rendering');
 		manage_settings_render();
 	}
 }
 
-function manage_settings_render(){
-  	var comparatorsTemplate = _.template( $('#comparators-template').html() );
+//when an a.manage element is clicked, 
+//close ALL tabs and open just the necessary one. 
+function manage_click(el){
+	$("section#manage span.manage-expanded").empty();
+	$('section#manage a.expand').children('i').html('expand_more');
 
-	$("section#manage div#settings").empty().append( comparatorsTemplate()  );
+	//if it's already open, close it
+	if(el.attr('data-open')=='true'){
+		//mark all as closed
+		$('section#manage a.expand').attr('data-open', 'false');
+	} else {
+		//mark all as closed
+		$('section#manage a.expand').attr('data-open', 'false');
+		//mark this as open
+		el.attr('data-open', 'true');
+		//change the icon
+		el.children('i').html('expand_less');
+
+		var id = el.attr('id');
+		var cinit = calculate_whereFrom(id);
+		//and render the according parts
+		render_manage_actions(id);
+		render_manage_nav( id, cinit );
+		render_manage_season( id, cinit );
+	}
+}
+
+function manage_settings_render(){
+  	var template = _.template( $('#comparators-template').html() );
+
+	$("section#manage div#settings").empty().append( template()  );
 
 	$('section#manage div#settings a.sortby').click(function(){
 		$('section#manage div#settings a.sortby').addClass('white grey-text');
@@ -100,12 +109,12 @@ function render_manage_actions(id){
 
   	var template	= _.template( 
   		$('#manage-actions-template').html() 
-		);
+	);
 
-		var data = {
-			showid 	: 	thisShow.get('show_id'),
-			name 	: 	thisShow.get('name'),
-		}
+	var data = {
+		showid 	: 	thisShow.get('show_id'),
+		name 	: 	thisShow.get('name'),
+	}
 
 	$('span#'+id+'.manage-expanded').append(
 		template(data)
@@ -183,9 +192,9 @@ function render_manage_season(id, season_index){
 	season_el.append( season_template() );
 
 	var eps_el = $('li.eps-row div div#box');
-		// console.log(eps_el);
+	// console.log(eps_el);
 
-		// var el = $('section#manage .manage-expanded div.episodes div#'+id+'x'+season_index);
+	// var el = $('section#manage .manage-expanded div.episodes div#'+id+'x'+season_index);
 	_.each(episodes[season_index], function(ep, ep_index) {
 
 		var seen = thisBool.get('array')[season_index][ep_index];
@@ -290,7 +299,7 @@ function render_lens(showid, season, len){
 
 //deletes a show from MYBOOLS and MYSHOWS
 function manage_delete(showid) {
-	// console.log('manage_delete() called');
+	// console.log('manage_delete() called on showid: ' + showid);
 
 	boolResult = myBools.match(showid);
 
@@ -299,6 +308,7 @@ function manage_delete(showid) {
 	make_toast('Deleted ' + showResult.get('name')); //let em know
 
 	boolResult.destroy(); //destroy bool
+
 	myShows.remove(showResult); //remove show
 
 	if(myShows.length==0){
@@ -338,10 +348,13 @@ function manage_set_all(showid, name, state) {
 	array = myShows.match(showid).get('episodes');
 
 	var tempArray = thisBools.get('array');
+
+	//sweep the array and mark all episodes as un/seen
 	_.each(tempArray, function(i_item, i_index) {
 		_.each(i_item, function(j_item, j_index) {
+			//if they've aired.
 			var hasAired = grok_airdate(array[i_index][j_index].airdate);
-			// console.log(hasAired);
+
 			if(!hasAired){
 				tempArray[i_index][j_index] = false;
 			} else {
@@ -350,16 +363,21 @@ function manage_set_all(showid, name, state) {
 		});
 	});
 
+	//toast us
 	if(state) {
 		make_toast('Marked all episodes of ' + name + ' as seen.');
 	} else {
 		make_toast('Queued all episodes of ' + name + '.');
 	}
 
+	//update the array
 	thisBools.set('array', tempArray);
+	//and save it
 	thisBools.save();
 
+	//for all elements,
 	_.each($('.manage-expanded li.eps-row a.episode'), function(i) {
+		//if it doesn't match the new state, toggle its appearance
 		if($(i).attr('data-seen')!=String(state)){
 			toggle_el($(i));				
 		}

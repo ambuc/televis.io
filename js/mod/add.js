@@ -6,11 +6,18 @@
 //
 // TELEVIS.IO ADD TAB FUNCTIONS
 
+
+var inProgress = false; //is a query in progress?
+//used to prevent late-returning ajax queries from disrupting state
+
 //cancel the ADD process --> return to $a
 function add_cancel() {
 	// console.log('add_cancel() called');
 
 	add_switch('a');
+	inProgress = false;
+	xhr.abort();
+	// yhr.abort();
 	// make_toast("Query aborted.");
 }
 
@@ -19,6 +26,7 @@ function add_cancel() {
 //  but, yknow, whatever
 function add_switch(stage) {
 	// console.log('add_switch() called');
+	console.log('inProgress: ' + inProgress);
 
 	$('section#add .card-content').hide();
 	$('section#add .card-action a').hide();
@@ -46,6 +54,7 @@ function add_ask() {
 
 	$("section#add input#input").keyup(function(event) {
 		if(event.keyCode == 13) { 
+			inProgress = true;
 			var title = $('section#add input#input').val();
 			add_bring(title);
 		}
@@ -53,6 +62,7 @@ function add_ask() {
 
 	$("section#add .card-action a#add").click(function(event) {
 		// console.log('adding');
+		inProgress = true;
 		var title = $('section#add input#input').val();
 		add_bring(title);
 	});
@@ -140,6 +150,7 @@ function add_finding(show_obj) {
 
 	add_switch('f');
 	$('#add-content-f h5 b').text(show_obj['name']);
+	inProgress = false;
 }
 
 //great, it worked

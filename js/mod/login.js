@@ -26,6 +26,8 @@ function try_login() {
 		bind_empties(true);
 		tab_goTo(defaultTab);
 		fetch_bools();
+		// check_shows();
+		// check_bools();
 	} else {
 		display_tabs(false);		bind_tabs(false);
 		display_wings(false);	bind_wings(false);

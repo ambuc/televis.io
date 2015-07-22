@@ -35,14 +35,18 @@ html{
 		/*flex: 1 0 auto;*/
 	}
 	.page-footer{
-		/*position: relative;*/
-		/*bottom:0px;*/
+		padding-top:0px;
+		background-color: #efefef !important;
 	}
-	.page-footer{
-		margin-top:0px !important;
+	.page-footer #texts {
+		padding-top:20px !important;
+		/*margin-top:20px !important;*/
+		/*border-top:1px solid #eee;*/
+		/*border-bottom:1px solid #eee;*/
+		margin-bottom:10px;
 	}
 	.page-footer #writtenwith{
-		color: lightgrey;
+		color: #bbb;
 	}
 	.page-footer #writtenwith a {
 		color: grey;
@@ -169,7 +173,11 @@ html{
 		max-height:300px;
 	}
 	section#add .card{
-		box-shadow: none;
+		/*background-color: #fff !important;*/
+		/*box-shadow: none;*/
+	}
+	section#add .card-content{
+		margin-bottom:20px; margin-top:20px;
 	}
 
 /*section#manage*/

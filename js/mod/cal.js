@@ -1,34 +1,17 @@
 function cal_render(){
 	// $('section#cal div#settings a').unbind();
-	$('section#cal div#settings a').click( cal_bind );
-	$('section#cal div#settings a#dashboard').click();
+	// $('section#cal div#settings a').click( cal_bind );
+	// $('section#cal div#settings a#month').click();
+	cal_render_month();
 }
 
-var cal_bind = function () {
-	// console.log('switch');
-	$('section#cal div#settings a').addClass('white grey-text');
-	$('section#cal div#settings a').removeClass('grey white-text');
-	$(this).toggleClass('white grey white-text grey-text');
-	cal_switch($(this).attr('id'));
-}
-
-function cal_render_dashboard(){
-	var upcoming = get_upcoming();
-
-	//sort upcoming by date
-	upcoming = _.sortBy(upcoming, function(u){
-		return moment(u.airdate);
-	});
-
-	var template = _.template( $('#cal-card-template').html() );
-	
-	$('section#cal #canvas').empty();
-	_.each(upcoming, function(ep){
-		ep.when = moment(ep.airdate).fromNow();
-		ep.date = moment(ep.airdate).format("ddd D MMM");
-		$('section#cal #canvas').append(template(ep));
-	});
-}
+// var cal_bind = function () {
+// 	// console.log('switch');
+// 	$('section#cal div#settings a').removeClass('black-text');
+// 	$('section#cal div#settings a').addClass('grey-text');
+// 	$(this).toggleClass('grey-text black-text');
+// 	cal_switch($(this).attr('id'));
+// }
 
 function get_upcoming(){
 	var upcoming = [];
@@ -77,7 +60,7 @@ function cal_render_month(){
 
 	_.each(_.range(28), function(i){
 		$('#canvas table tbody td#'+i).append(
-			'<div class="tr-head">'+ moment(lastSunday).add(i, 'days').format("MMM Do") +'</div>'
+			'<span class="tr-head">'+ moment(lastSunday).add(i, 'days').format("MMM D") +'</span>'
 		);
 	});
 
@@ -88,21 +71,21 @@ function cal_render_month(){
 			'days'
 		);
 		// console.log(ep);
-		$('section#cal #canvas tbody td#'+diff).append( '<div class="cal-item truncate tooltipped" data-position="auto" data-delay-"50" data-tooltip="'+ep.title+'">' + ep.name + '<div>' );
+		$('section#cal #canvas tbody td#'+diff).append( '<span class="cal-item truncate tooltipped" data-position="auto" data-delay-"50" data-tooltip="'+ep.title+'">' + ep.name + '</span>' );
 	});
 
-	$('section#cal #canvas tbody td#'+moment().diff(moment().startOf('week'), 'days')+' .tr-head').html('<div class="today">Today</div>');
+	$('section#cal #canvas tbody td#'+moment().diff(moment().startOf('week'), 'days')+' .tr-head').html('<span class="today">Today</span>');
 
 	$('.tooltipped').tooltip({delay: 50});
 }
 
-function cal_switch(id){
-	if(id=='dashboard'){
-		cal_render_dashboard();
-	} else if (id='month'){
-		cal_render_month();
-	}
-}
+// function cal_switch(id){
+// 	if(id=='dashboard'){
+// 		cal_render_dashboard();
+// 	} else if (id='month'){
+		
+// 	}
+// }
 
 
 

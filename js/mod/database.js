@@ -11,13 +11,13 @@
 // https://developer.yahoo.com/yql/console/#h=select+*+from+xml+where+url%3D'services.tvrage.com%2Ffeeds%2Fsearch.php%3Fshow%3Dlost'
 //with the $data, we print the CHOOSE panel.
 function search_shortname(shortname, string){
-	$.ajax({
+	xhr = $.ajax({
 		url: "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D\"services.tvrage.com%2Ffeeds%2Fsearch.php%3Fshow%3D"+encodeURIComponent(shortname)+"\"&format=json&diagnostics=true&callback=", 
 		// url: 'http://services.tvrage.com/feeds/search.php?show=' + shortname, 
 		dataType: "json",
 		type: 'GET',
 		success: function(data) {
-			console.log(data.query.results.Results.show);
+			// console.log(data.query.results.Results.show);
 			data = data.query.results.Results.show;
 			if (data == false) { //if nothing happens,
 				add_switch('a'); //return to ASK screen
@@ -27,6 +27,10 @@ function search_shortname(shortname, string){
 				add_switch('a'); //and return to ASK screen
 			} else { //if there are search results,
 				add_switch('c'); //proceed to CHOOSE screen
+				if (!inProgress){
+					// console.log('inProgress: ' + inProgress);
+					return;
+				}
 				data = wrap_data(data); //wrap the data in an array,
 				add_choose(string, data); //and push the search results to it
 				//let us know how many results were found
@@ -100,15 +104,29 @@ function fetch_eps(showModel, seen) {
 	// console.log('fetch_eps() called');
 
 	// console.log('getting episodes by model');
-	$.ajax({
+	yhr = $.ajax({
 		url: "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'services.tvrage.com%2Ffeeds%2Fepisode_list.php%3Fsid%3D"+showModel.get('show_id')+"'&format=json&diagnostics=true&callback=", 
 		// url: 'http://services.tvrage.com/feeds/episode_list.php?sid='+showModel.get('show_id'),
 		dataType: "json",
 		type: 'GET',
 		success: function(data) {
-			console.log(data);
+			// console.log(data);
 			data = data.query.results.Show;
-			showModel.set('episodes', clean_data(data));
+			console.log(data);
+			if(_.isUndefined(data)){
+				make_toast("No episodes found in show. Try again later.");
+				add_switch('a');
+				return;
+			}
+			data = clean_data(data);
+			// console.log('data');
+			// console.log(data);
+			if(_.isEmpty(data)){
+				make_toast("No episodes returned from database. Try again later.");
+				add_switch('a');
+				return;
+			}
+			showModel.set('episodes', data);
 			showModel.save();
 			try_bools(showModel, seen);
 		},
@@ -118,9 +136,30 @@ function fetch_eps(showModel, seen) {
 	});
 }
 
+function update_eps(showModel){
+	// console.log('update_eps()');
+
+	$.ajax({
+		url: "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'services.tvrage.com%2Ffeeds%2Fepisode_list.php%3Fsid%3D"+showModel.get('show_id')+"'&format=json&diagnostics=true&callback=", 
+		// url: 'http://services.tvrage.com/feeds/episode_list.php?sid='+showModel.get('show_id'),
+		dataType: "json",
+		type: 'GET',
+		success: function(data) {
+			// console.log(data);
+			data = data.query.results.Show;
+			showModel.set('episodes', clean_data(data));
+			showModel.save();
+		},
+		error: function(error) {
+			// console.log('could not update show');
+		}
+	});
+}
+
 //given a $showModel and a status $seen,
 //	create a user-specifc BOOLS model and .save() it. 
 function try_bools(showModel, seen) {
+	// console.log('try_bools()');
 
 	var query = new Parse.Query(Parse.Object.extend("Bools"));
 	//two constraints -- $show_id and $user -- UNSCALEABLE, I think
@@ -187,7 +226,6 @@ function try_bools(showModel, seen) {
 //  and fetches each relevant show
 //  and adds them to myShows
 function fetch_bools() {
-
 	// console.log('fetch_bools() called');
 
 	var boolsQuery  = new Parse.Query( Parse.Object.extend("Bools") );
@@ -224,26 +262,56 @@ function fetch_show(id) {
 }
 
 function check_shows(){
-	var showsQuery  = new Parse.Query( Parse.Object.extend("Show") );
+	var query  = new Parse.Query( Parse.Object.extend("Show") );
 	//async
-	showsQuery.find({
+	query.find({
 		success: function(results) {
 			// console.log(results);
 
 			_.each(results, function(result){
 				var status = result.get('status')
 				if (	
-					moment().diff( result.updatedAt, 'days') > 5
+					moment().diff( result.updatedAt, 'days') > turnover
 					&& status != "Ended" 
 					&& status != "Canceled"
 					&& status != "Canceled/Ended"	
 				) {
 					// console.log('   ' + result.get('name') + ' //' + result.get('status') + '// needs updating');
+					update_eps(result);
 				}
 
 			});
 
 		}
+	});
+}
+
+//goes thru all the user's bools, checking their length against the newly-updated show episodes array. if it's not long enough (if it's undefined), we initialize that entry as false - unseen.
+function check_bools(){
+	// console.log('check_bools()');
+	_.each(myBools.models, function(bool){
+
+		show = myShows.match(bool.get('show_id'));
+
+		var arrCopy = bool.get('array');
+		var eps = show.get('episodes');
+
+		for(var i = 0; i < eps.length; i++){
+			if (_.isUndefined(arrCopy[i])){
+				arrCopy[i] = [];
+				console.log('undefined, creating season' + i);
+			}
+			for(var j = 0; j < eps[i].length; j++){
+				if (_.isUndefined(arrCopy[i][j])){
+					arrCopy[i][j] = false;
+					console.log('undefined, for show ' + show.get('name') + ' creating season' + i + ' episode ' + j + ' and initializing as `false`');
+				}
+			}
+		}
+
+		bool.set('array', arrCopy);
+		bool.save();
+
 	});
 }
 

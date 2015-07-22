@@ -140,11 +140,14 @@ function async(your_function, callback) {
 
 // takes a $data OBJ and retuns a nicer $result OBJ
 function clean_data(data) {
+	if (_.isUndefined(data)){ return null; }
 	// console.log('clean_data() called');
+	// console.log('data');
 	// console.log(data);
 	// console.log('processing episodes');
 	var result = [];
-	if ( data.totalseasons == 1 ) { //weird case
+	//if there's just one season, it'll be an object, not an array.
+	if ( _.isUndefined(data.Episodelist.Season.length) ) { //weird case
 		result[0] = [];
 		for (var i = 0; i < data.Episodelist.Season.episode.length; i++) {
 			result[0][i] = {};
@@ -154,6 +157,8 @@ function clean_data(data) {
 			result[0][i]['title'] = data.Episodelist.Season.episode[i].title;
 		}
 	} else { //normal case
+		// console.log('data.Episode');
+		// console.log(data.Episode);
 		for (var i = 0; i < data.Episodelist.Season.length; i++) {
 			result[i] = [];
 			for (var j = 0; j < data.Episodelist.Season[i].episode.length; j++) {

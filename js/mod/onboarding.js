@@ -97,6 +97,7 @@ function onboarding_collect() {
 	        },
 
 	        error: function(user, error) {
+	        	make_toast(_.escape(error.message));
 	        	console.log(_.escape(error.message));
 	        	onboarding_try_again();
 	        }

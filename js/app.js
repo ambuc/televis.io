@@ -1,11 +1,9 @@
 // -	FINISH televis.io
 // 	-	BUGS
-// 		-	EMPTY panel for when there's a new season but no eps in it
-// 		-	DUPLICATES when adding a show twice in succession
-// 		-	doesn't yet AUTO-UPDATE shows !!!
+
 // 	-	FEATURES
-// 		-	SUPPORT larger data sets
 // 		-	ADD specific episodes
+
 // 	-	OPTIMIZATIONS
 // 		-	CALCULATE_QUEUED should be simple array not _.underscore
 // 		-	FETCH_EPS need not trigger for shows in parse database
@@ -20,23 +18,15 @@
 // APP
 
 
-// $.ajax({
-// 	url: "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D'services.tvrage.com%2Ffeeds%2Fsearch.php%3Fshow%3Dlost'&format=json&diagnostics=true&callback=",
-// 	dataType: "json",
-// 	type: 'GET',
-// 	success: function(data) {
-// 		console.log(data.query.results);
-// 	}
-// });
-
-
 Parse.$ = jQuery; //reassign jQuery, god knows why
 Parse.initialize("CI4kTSt4LME3DQopwCpnh4E4yEFwr0fEwYpAeNuF", "kh8MdcK8IcQnTMXzCmUvogxdREWP7eyRv4VGQoVG"); //initialize with login keys
 
+var xhr; var yhr;
 var currentTab = ''; 		// which tab we're on
-var defaultTab = 'queue';  // which tab to open on
+var defaultTab = 'add';  // which tab to open on
 var queueLimit = 3; 		// num of eps per show in q item
 var comparatorType = 'date'; //initial default comparator
+var turnover = 3; //how often televis.io checks for new information from tvrage
 
 var _MS_PER_DAY = 1000 * 60 * 60 * 24; //stuff for date handling, from SE
 
@@ -224,7 +214,7 @@ function bg_recolor(desiredTab){
 }
 
 function tab_recolor(currentTab, desiredTab){
-	console.log(tabColors[currentTab]);
+	// console.log(tabColors[currentTab]);
 	if(currentTab!=""){
 		$('header li #'+currentTab).parent().removeClass(tabColors[currentTab]);		
 		$('header li #'+currentTab+' i').removeClass('white-text');		
@@ -310,6 +300,11 @@ function check_stacks(desiredTab) {
 		if(desiredTab == 'manage'){
 			render_manage();				
 		}
+
+		//things that must be loaded after myShows is full
+		check_shows(); //updates shows that need updating
+		check_bools(); //updates bools that need updating
+
 	} else {
 		//manage is empty, queue is empty
 		// console.log('manage is empty, queue is empty');
