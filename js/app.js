@@ -23,7 +23,7 @@ Parse.initialize("CI4kTSt4LME3DQopwCpnh4E4yEFwr0fEwYpAeNuF", "kh8MdcK8IcQnTMXzCm
 
 var xhr; var yhr;
 var currentTab = ''; 		// which tab we're on
-var defaultTab = 'add';  // which tab to open on
+var defaultTab = 'queue';  // which tab to open on
 var queueLimit = 3; 		// num of eps per show in q item
 var comparatorType = 'date'; //initial default comparator
 var turnover = 3; //how often televis.io checks for new information from tvrage
