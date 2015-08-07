@@ -70,6 +70,7 @@ function calculate_whereFrom(id){
 //if the first season is entirely seen, start from the second
 function calculate_whichFrom(id){
 	var array = myBools.match(id).get('array');
+	var eps = myShows.match(id).get('episodes');
 
 	var season = 0;
 	var episode = 0;
@@ -89,6 +90,19 @@ function calculate_whichFrom(id){
 		found = true;
 	}
 
+	//if the show exists in myBools but not in myShows, decrement episode
+	while(_.isUndefined(eps[season][episode]) && episode >= 0){
+		episode--;
+	}
+
+	//if we reach the start of the season and it's still undefined, return 0,0
+	if(_.isUndefined(eps[season][episode])){
+		return {
+			's' : 0,
+			'e' : 0
+		}
+	}
+
 	return {
 		's' : season,
 		'e' : episode
@@ -99,7 +113,13 @@ function calculate_whichFrom(id){
 //calculates the date of the most recent unseen episode
 function calculate_mostRecentAirdate(id){
 	var obj = calculate_whichFrom(id);
-	return moment( myShows.match(id).get('episodes')[obj['s']][obj['e']].airdate ).unix();
+	var show = myShows.match(id);
+	var eps = show.get('episodes');
+	var s = eps[obj['s']];
+	var e = s[obj['e']];
+	var a = e.airdate;
+	return moment( a ).unix();
+	// return moment( myShows.match(id).get('episodes')[obj['s']][obj['e']].airdate ).unix();
 }
 
 //returns a boolean; true if the $date is before global $today

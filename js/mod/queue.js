@@ -276,7 +276,12 @@ function calculate_queued(showid, season) {
 			var eps = myShows.match(showid).get('episodes');
 
 			_.each(array[season], function(e, j) {
-				if( !e && grok_airdate( eps[season][j].airdate ) ) {num++};
+				if(j < eps[season].length ){ 
+					// console.log(eps[season][j]);
+					if(!e && grok_airdate( eps[season][j].airdate ) ) {
+						num++;
+					}
+				}
 			});
 		}			
 	}
